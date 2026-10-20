@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "svitlo-site",
+  "compatibility_date": "2025-03-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "svitlo-site" }],
+  // Публічні змінні (не секрети). Секретний ключ Supabase додається в Cloudflare → Settings → Variables (Secret).
+  "vars": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://teidqxvftoihhwmubiyf.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_Sm2y9bo0N-Zx-FfnfUWAqg_k9CidQkt"
+  }
+}
