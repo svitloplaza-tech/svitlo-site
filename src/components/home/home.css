@@ -103,3 +103,6 @@
   .home .hero-copy{opacity:calc(1 - var(--shop,0))}
 }
 @media(prefers-reduced-motion:reduce){.home .shop{transition:none}}
+.home .shop-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.home .shop-stock{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--sp-white)}
+.home .shop-stock i{width:8px;height:8px;border-radius:50%;background:#7FB58A}
