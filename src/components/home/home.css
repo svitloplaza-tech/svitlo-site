@@ -1,4 +1,5 @@
-.home .hero{height:190vh;position:relative}
+.home .hero{height:160vh;position:relative;z-index:1}
+.home .hero .stick{opacity:var(--fade,1)}
 .home .stick{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
 .home #bg,.home #orb{position:absolute;inset:0;width:100%;height:100%;display:block}
 .home .hero-copy{position:absolute;left:0;right:0;bottom:6vh;text-align:center;display:grid;gap:16px;justify-items:center}
@@ -16,7 +17,8 @@
 @media(max-width:720px){.home .prod{display:none}
 .home .finish{left:50%;right:auto;transform:translateX(-50%)}
 }
-.home .temp{height:200vh;position:relative}
+.home .temp{height:170vh;position:relative;z-index:2;margin-top:-25vh}
+.home .temp .stick{opacity:var(--fade,1);background:linear-gradient(to bottom,transparent 0,var(--sp-black) 14vh)}
 .home .temp .stick{display:grid;align-items:center}
 .home .temp .glow{position:absolute;left:72%;top:45%;width:150vmax;height:150vmax;transform:translate(-50%,-50%) scale(.8);pointer-events:none;
   background:radial-gradient(circle,color-mix(in srgb,var(--tc) 50%,transparent) 0%,color-mix(in srgb,var(--tc) 12%,transparent) 25%,transparent 52%);opacity:.9}
@@ -38,7 +40,7 @@
 .home .spectrum{display:none}
 .home .stages li{padding:10px 12px}
 }
-.home .cat{padding-block:18vh 14vh;overflow:hidden;position:relative}
+.home .cat{padding-block:22vh 14vh;overflow:hidden;position:relative;z-index:3;margin-top:-25vh;background:linear-gradient(to bottom,transparent 0,var(--sp-black) 16vh)}
 .home .cat::before{content:"";position:absolute;inset:0;pointer-events:none;
   background-image:radial-gradient(circle,rgba(255,255,255,.07) 1.4px,transparent 1.5px);background-size:14px 14px;
   -webkit-mask:radial-gradient(ellipse 60% 50% at 50% 40%,#000,transparent 75%);mask:radial-gradient(ellipse 60% 50% at 50% 40%,#000,transparent 75%)}
@@ -82,7 +84,9 @@
 .home .shop{position:absolute;right:var(--gr);top:40%;width:min(380px,calc(100% - 32px));z-index:3;display:grid;gap:14px;padding:22px;border-radius:24px;
   background:color-mix(in srgb,var(--sp-graphite) 72%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 30px 80px -20px rgba(255,106,43,calc(var(--shop,0)*.35));
-  opacity:var(--shop,0);transform:translateY(calc(-50% + (1 - var(--shop,0))*28px));pointer-events:none;transition:opacity .2s linear}
+  opacity:var(--shop,0);will-change:transform;pointer-events:none;
+  /* вилітає зверху й далі повільно спускається разом із прокруткою */
+  transform:translateY(calc(-50% - (1 - var(--shop,0))*70vh + var(--p,0)*7vh))}
 .home .shop.on{pointer-events:auto}
 .home .shop h3{font-size:24px;line-height:1.15;font-weight:300}
 .home .shop-desc{margin:0;color:var(--sp-mute);font-size:14px}
@@ -95,14 +99,15 @@
 .home .shop-kinds a{font-size:13px;color:var(--sp-mute);text-decoration:none;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.05)}
 .home .shop-kinds a:hover{color:var(--sp-white)}
 @media(max-width:900px){
-  .home .hero{height:160vh}
-  .home .temp{height:170vh}
+  .home .hero{height:140vh}
+  .home .temp{height:150vh;margin-top:-18vh}
+  .home .cat{margin-top:-18vh}
   .home .shop{left:var(--gl);right:var(--gr);width:auto;top:auto;bottom:calc(16px + env(safe-area-inset-bottom,0px));gap:10px;padding:18px;
-    transform:translateY(calc((1 - var(--shop,0))*40px))}
+    transform:translateY(calc(-1 * (1 - var(--shop,0))*80vh + var(--p,0)*3vh))}
   .home .shop h3{font-size:20px}.home .shop-desc{display:none}.home .shop-price b{font-size:30px}
   .home .hero-copy{opacity:calc(1 - var(--shop,0))}
 }
-@media(prefers-reduced-motion:reduce){.home .shop{transition:none}}
+@media(prefers-reduced-motion:reduce){.home .shop{transform:translateY(-50%)}.home .hero .stick,.home .temp .stick{opacity:1}}
 .home .shop-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .home .shop-stock{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--sp-white)}
 .home .shop-stock i{width:8px;height:8px;border-radius:50%;background:#7FB58A}

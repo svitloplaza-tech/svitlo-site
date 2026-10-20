@@ -196,24 +196,24 @@ export function initHome(root, Lenis){
   let heroP=0, heroVisible=true;
   function heroState(p){
     for(const o of ORBS){
-      let l=ss(.06+o.delay,.55+o.delay*.4,p);
-      const f0=.06+o.delay, f1=.2+o.delay;
+      let l=ss(.04+o.delay,.42+o.delay*.4,p);
+      const f0=.04+o.delay, f1=.15+o.delay;
       if(p>f0&&p<f1&&!reduce){ l = Math.random()<.5 ? l*.15 : Math.max(l,.35*Math.random()); }
       o.lit=reduce?1:l;
       o.cy=o.cy0-(reduce?0:p)*H*o.drift;
     }
     lit=ORBS[1].lit;
-    hero.style.setProperty('--lit',lit.toFixed(3));
-    const s=reduce?1:ss(.06,.6,p);
+    hero.style.setProperty('--lit',lit.toFixed(3)); hero.style.setProperty('--p',p.toFixed(4));
+    const s=reduce?1:ss(.04,.45,p);
     rK.textContent=Math.round(s*4000); rW.textContent=Math.round(s*19); rP.textContent=Math.round(s*100);
     hint.style.opacity=reduce?0:clamp(1-p*6)*.9;
-    const sh=reduce?1:ss(.42,.7,p); hero.style.setProperty('--shop',sh.toFixed(3)); if(shopEl) shopEl.classList.toggle('on',sh>.5);
+    const sh=reduce?1:ss(.16,.5,p); hero.style.setProperty('--fade',reduce?'1':(1-ss(.82,1,p)*.85).toFixed(3)); hero.style.setProperty('--shop',sh.toFixed(3)); if(shopEl) shopEl.classList.toggle('on',sh>.5);
   }
   function tempFrame(p){
-    temp.style.setProperty('--p',p.toFixed(4));
+    temp.style.setProperty('--p',p.toFixed(4)); temp.style.setProperty('--fade',reduce?'1':(1-ss(.8,1,p)*.85).toFixed(3));
     let k,c;
-    if(p<.5){const t=ss(.15,.45,p);k=2700+t*1300;c=mixHex('#FFA068','#F6F2EC',t)}
-    else{const t=ss(.55,.85,p);k=4000+t*2500;c=mixHex('#F6F2EC','#687FFF',t)}
+    if(p<.4){const t=ss(.06,.34,p);k=2700+t*1300;c=mixHex('#FFA068','#F6F2EC',t)}
+    else{const t=ss(.4,.68,p);k=4000+t*2500;c=mixHex('#F6F2EC','#687FFF',t)}
     temp.style.setProperty('--tc',c);
     kv.textContent=Math.round(k/10)*10;
     const idx=k<3350?0:k<5250?1:2; stages.forEach((li,i)=>li.classList.toggle('on',i===idx));
