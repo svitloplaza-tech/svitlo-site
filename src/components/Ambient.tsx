@@ -11,9 +11,9 @@ export default function Ambient() {
     type P = { x: number; y: number; z: number; len: number; ang: number; a: number; cool: boolean; vx: number; ph: number };
     let W = 0, H = 0, D = 1, ps: P[] = [], alive = true, raf = 0;
     const init = () => {
-      D = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight;
+      D = 1; W = innerWidth; H = innerHeight;
       c.width = W * D; c.height = H * D; x.setTransform(D, 0, 0, D, 0, 0);
-      const n = Math.round(Math.min(120, (W * H) / 13000)); ps = [];
+      const n = Math.round(Math.min(W < 720 ? 50 : 120, (W * H) / 13000)); ps = [];
       for (let i = 0; i < n; i++) {
         const z = Math.random();
         ps.push({ x: Math.random() * W, y: Math.random() * H * 1.6, z, len: 4 + z * 12, ang: -0.5 + Math.random() * 0.35,
@@ -23,6 +23,8 @@ export default function Ambient() {
     let t = 0, last = performance.now();
     const draw = (now: number) => {
       if (!alive) return;
+      // на головній, поки видно першу сцену, фон не малюємо (її canvas і так перекриває екран)
+      if ((window as unknown as { __spHero?: boolean }).__spHero) { last = now; if (!reduce) raf = requestAnimationFrame(draw); return; }
       const dt = Math.min(50, now - last); last = now; t += dt / 1000;
       const sy = scrollY; x.clearRect(0, 0, W, H); x.lineCap = "round";
       for (const p of ps) {
@@ -40,7 +42,8 @@ export default function Ambient() {
       if (!reduce) raf = requestAnimationFrame(draw);
     };
     init();
-    const onResize = () => { init(); if (reduce) draw(performance.now()); };
+    let lw = innerWidth;
+    const onResize = () => { if (innerWidth === lw && innerWidth < 720) return; lw = innerWidth; init(); if (reduce) draw(performance.now()); };
     const onScroll = () => draw(performance.now());
     addEventListener("resize", onResize);
     if (reduce) { draw(performance.now()); addEventListener("scroll", onScroll, { passive: true }); }

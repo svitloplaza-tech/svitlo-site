@@ -62,15 +62,16 @@ export function initHome(root, Lenis){
     });
   }
   function size(){
-    DPR=Math.min(2,devicePixelRatio||1);
     const r=orb.getBoundingClientRect(); W=r.width;H=r.height; mobile=W<720;
-    [orb,bg,mask].forEach(c=>{c.width=W*DPR;c.height=H*DPR});
-    octx.setTransform(DPR,0,0,DPR,0,0); bctx.setTransform(DPR,0,0,DPR,0,0); mctx.setTransform(DPR,0,0,DPR,0,0);
+    // Продуктивність: сфери — до 1.5x (на телефоні 1x), крапки й маска — завжди 1x
+    DPR=mobile?1:Math.min(1.5,devicePixelRatio||1);
+    orb.width=W*DPR;orb.height=H*DPR;[bg,mask].forEach(c=>{c.width=W;c.height=H});
+    octx.setTransform(DPR,0,0,DPR,0,0); bctx.setTransform(1,0,0,1,0,0); mctx.setTransform(1,0,0,1,0,0);
     R0=mobile?Math.min(W*.36,H*.2):Math.min(W*.26,H*.27);
     layout();
-    dotTile=document.createElement('canvas'); dotTile.width=W*DPR; dotTile.height=H*DPR;
-    const t=dotTile.getContext('2d'); t.setTransform(DPR,0,0,DPR,0,0); t.fillStyle='#fff';
-    for(let y=7;y<H;y+=14)for(let x=7;x<W;x+=14){t.beginPath();t.arc(x,y,1.25,0,6.283);t.fill()}
+    dotTile=document.createElement('canvas'); dotTile.width=W; dotTile.height=H;
+    const t=dotTile.getContext('2d'); t.fillStyle='#fff';
+    t.beginPath(); for(let y=7;y<H;y+=14)for(let x=7;x<W;x+=14){t.moveTo(x+1.25,y);t.arc(x,y,1.25,0,6.283)} t.fill();
     lastKey='';
   }
   const glow=document.createElement('canvas'); glow.width=glow.height=128;
@@ -81,7 +82,8 @@ export function initHome(root, Lenis){
   /* Крапки: сяйво від кожної сфери, яскравість і радіус ростуть зі світлом */
   let lastKey='';
   function drawDots(){
-    const key=ORBS.map(o=>o.lit.toFixed(3)+'|'+o.cy.toFixed(0)).join();
+    // перемальовуємо крапки лише при помітній зміні (крок 0.03 яскравості і 6 px)
+    const key=ORBS.map(o=>Math.round(o.lit*33)+'|'+Math.round(o.cy/6)).join();
     if(key===lastKey) return; lastKey=key;
     mctx.globalCompositeOperation='source-over'; mctx.clearRect(0,0,W,H);
     mctx.globalCompositeOperation='lighter';
@@ -114,60 +116,74 @@ export function initHome(root, Lenis){
     const y2=y*cp-z*sp, z2=y*sp+z*cp, f=3.2/(3.2-z2);
     return [o.cx+x*o.R*f, o.cy+y2*o.R*f, z2];
   }
-  function drawOrb(o){
+  // Далеку сферу малюємо в пів-роздільності й розтягуємо — природне розмиття без дорогого canvas filter
+  const farC=document.createElement('canvas'), fctx=farC.getContext('2d');
+  function drawOrb(o,c){
     const F=FIN[finish], K=o.depth, L=o.lit;
-    if(o.blur&&'filter' in octx) octx.filter=`blur(${o.blur}px)`;
-    // підвіс
-    octx.strokeStyle=rgb(mixA([60,60,60],F.mid,.4),.9*K); octx.lineWidth=1.5*o.s;
-    octx.beginPath();octx.moveTo(o.cx,0);octx.lineTo(o.cx,o.cy-o.R*.9);octx.stroke();
-    octx.fillStyle=rgb(F.dark,K); octx.fillRect(o.cx-22*o.s,0,44*o.s,6);
+    c.strokeStyle=rgb(mixA([60,60,60],F.mid,.4),.9*K); c.lineWidth=1.5*o.s;
+    c.beginPath();c.moveTo(o.cx,0);c.lineTo(o.cx,o.cy-o.R*.9);c.stroke();
+    c.fillStyle=rgb(F.dark,K); c.fillRect(o.cx-22*o.s,0,44*o.s,6);
     if(L>0){
-      octx.globalCompositeOperation='lighter';
+      c.globalCompositeOperation='lighter';
       const s=o.R*(2.2+L*1.6);
-      octx.globalAlpha=L*.55*K; octx.drawImage(glow,o.cx-s,o.cy-s,s*2,s*2);
-      octx.globalAlpha=1; octx.globalCompositeOperation='source-over';
+      c.globalAlpha=L*.55*K; c.drawImage(glow,o.cx-s,o.cy-s,s*2,s*2);
+      c.globalAlpha=1; c.globalCompositeOperation='source-over';
     }
-    const segs=[];
+    // сегменти дуг групуємо за відтінком (≈24 групи) — один stroke на групу замість тисячі
+    const buckets=new Map();
     for(const a of o.g.arcs){
       let prev=project(a.pts[0],o);
-      for(let k=1;k<a.pts.length;k++){const cur=project(a.pts[k],o);segs.push([prev,cur,(prev[2]+cur[2])/2,a.pts[k][3]+a.ph]);prev=cur}
+      for(let k=1;k<a.pts.length;k++){
+        const cur=project(a.pts[k],o);
+        const front=((prev[2]+cur[2])/2+1)/2;
+        const spec=Math.pow(Math.max(0,Math.sin((a.pts[k][3]+a.ph)*2+yaw*3*o.spin)),6);
+        const key=Math.round(front*5)*10+Math.round(spec*3);
+        let bk=buckets.get(key); if(!bk){bk=[];buckets.set(key,bk)}
+        bk.push(prev[0],prev[1],cur[0],cur[1]); prev=cur;
+      }
     }
-    segs.sort((s1,s2)=>s1[2]-s2[2]);
     const amb=.28+L*.72;
-    octx.lineCap='round';
-    for(const s of segs){
-      const front=(s[2]+1)/2;
-      const spec=Math.pow(Math.max(0,Math.sin(s[3]*2+yaw*3*o.spin)),6);
-      let c=mixA(F.dark,F.mid,front*amb);
-      c=mixA(c,F.hi,spec*(.25+L*.65)*front);
-      if(L>0) c=mixA(c,F.litTint,L*.25*front);
-      octx.strokeStyle=rgb(c,(.35+front*.65)*K);
-      octx.lineWidth=(o.R/150)*(1.1+front*1.6);
-      octx.beginPath();octx.moveTo(s[0][0],s[0][1]);octx.lineTo(s[1][0],s[1][1]);octx.stroke();
-    }
+    c.lineCap='round';
+    [...buckets.keys()].sort((x,y)=>x-y).forEach(key=>{
+      const front=Math.floor(key/10)/5, spec=(key%10)/3, pts=buckets.get(key);
+      let col=mixA(F.dark,F.mid,front*amb);
+      col=mixA(col,F.hi,spec*(.25+L*.65)*front);
+      if(L>0) col=mixA(col,F.litTint,L*.25*front);
+      c.strokeStyle=rgb(col,(.35+front*.65)*K);
+      c.lineWidth=(o.R/150)*(1.1+front*1.6);
+      c.beginPath();
+      for(let i=0;i<pts.length;i+=4){c.moveTo(pts[i],pts[i+1]);c.lineTo(pts[i+2],pts[i+3])}
+      c.stroke();
+    });
     for(const l of o.g.leds){
       const p=project(l.p,o), q=project(l.q,o), front=(p[2]+1)/2;
       const tw=.85+.15*Math.sin(time*2+l.tw);
       const a=L*(.25+front*.75)*tw*K;
-      octx.globalCompositeOperation='lighter';
+      c.globalCompositeOperation='lighter';
       if(a>0.01){
         const s=o.R*(.10+.10*front)*(.6+L*.6);
-        octx.globalAlpha=a; octx.drawImage(glow,p[0]-s,p[1]-s,s*2,s*2);
-        if(front>.55&&L>.5&&o.depth>.8){octx.globalAlpha=a*.5;octx.strokeStyle=rgb(LIGHT);octx.lineWidth=1;
-          const k=s*1.4;octx.beginPath();octx.moveTo(p[0]-k,p[1]);octx.lineTo(p[0]+k,p[1]);octx.moveTo(p[0],p[1]-k);octx.lineTo(p[0],p[1]+k);octx.stroke()}
+        c.globalAlpha=a; c.drawImage(glow,p[0]-s,p[1]-s,s*2,s*2);
+        if(front>.55&&L>.5&&o.depth>.8){c.globalAlpha=a*.5;c.strokeStyle=rgb(LIGHT);c.lineWidth=1;
+          const k=s*1.4;c.beginPath();c.moveTo(p[0]-k,p[1]);c.lineTo(p[0]+k,p[1]);c.moveTo(p[0],p[1]-k);c.lineTo(p[0],p[1]+k);c.stroke()}
       }
-      octx.globalAlpha=1; octx.globalCompositeOperation=a>.2?'lighter':'source-over';
-      octx.strokeStyle=a>.2?rgb(LIGHT,Math.min(1,a+.2)):rgb(F.mid,(.3+front*.5)*K);
-      octx.lineWidth=(o.R/150)*(2+front*2);
+      c.globalAlpha=1; c.globalCompositeOperation=a>.2?'lighter':'source-over';
+      c.strokeStyle=a>.2?rgb(LIGHT,Math.min(1,a+.2)):rgb(F.mid,(.3+front*.5)*K);
+      c.lineWidth=(o.R/150)*(2+front*2);
       const mx=(q[0]-p[0])*.35,my=(q[1]-p[1])*.35;
-      octx.beginPath();octx.moveTo(p[0]-mx,p[1]-my);octx.lineTo(p[0]+mx,p[1]+my);octx.stroke();
+      c.beginPath();c.moveTo(p[0]-mx,p[1]-my);c.lineTo(p[0]+mx,p[1]+my);c.stroke();
     }
-    octx.globalAlpha=1; octx.globalCompositeOperation='source-over';
-    if(o.blur&&'filter' in octx) octx.filter='none';
+    c.globalAlpha=1; c.globalCompositeOperation='source-over';
   }
   function drawScene(){
     octx.clearRect(0,0,W,H);
-    for(const o of ORBS) drawOrb(o);
+    for(const o of ORBS){
+      if(o.blur){
+        const s=.5;
+        if(farC.width!==Math.round(W*s)){farC.width=Math.round(W*s);farC.height=Math.round(H*s)}
+        fctx.setTransform(s,0,0,s,0,0); fctx.clearRect(0,0,W,H);
+        drawOrb(o,fctx); octx.drawImage(farC,0,0,W,H);
+      } else drawOrb(o,octx);
+    }
   }
 
   /* ---------- Сцени ---------- */
@@ -215,13 +231,15 @@ export function initHome(root, Lenis){
     }
     if(alive)requestAnimationFrame(loop);
   }
-  const hio=new IntersectionObserver(e=>{heroVisible=e[0].isIntersecting},{rootMargin:'100px'});hio.observe(hero);offs.push(()=>hio.disconnect());
+  const hio=new IntersectionObserver(e=>{heroVisible=e[0].isIntersecting;window.__spHero=heroVisible},{rootMargin:'100px'});hio.observe(hero);offs.push(()=>hio.disconnect());
 
   // перемикач оздоблення
 
 
   size(); onScroll();
-  on(window,'resize',()=>{size();onScroll();if(reduce){drawScene();drawDots()}});
+  // на телефонах resize спрацьовує від панелі адреси під час прокрутки — перебудовуємо лише при зміні ширини
+  let lastW=innerWidth;
+  on(window,'resize',()=>{if(Math.abs(innerWidth-lastW)<2&&mobile)return;lastW=innerWidth;size();onScroll();if(reduce){drawScene();drawDots()}});
   on(window,'scroll',onScroll,{passive:true}); if(lenis) lenis.on('scroll',onScroll);
   if(reduce){drawScene();drawDots()} else requestAnimationFrame(loop);
 
@@ -237,5 +255,5 @@ export function initHome(root, Lenis){
   root.querySelectorAll('.t').forEach(t=>t.addEventListener('pointermove',e=>{const r=t.getBoundingClientRect();t.style.setProperty('--mx',(e.clientX-r.left)+'px');t.style.setProperty('--my',(e.clientY-r.top)+'px')}));
   root.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const el=document.querySelector(a.getAttribute('href'));if(el&&lenis){e.preventDefault();lenis.scrollTo(el)}}));
 
-  return ()=>{alive=false;offs.forEach(f=>f());if(lenis)lenis.destroy();document.documentElement.classList.remove('js');};
+  return ()=>{alive=false;window.__spHero=false;offs.forEach(f=>f());if(lenis)lenis.destroy();document.documentElement.classList.remove('js');};
 }
