@@ -207,10 +207,10 @@ export function initHome(root, Lenis){
     const s=reduce?1:ss(.04,.45,p);
     rK.textContent=Math.round(s*4000); rW.textContent=Math.round(s*19); rP.textContent=Math.round(s*100);
     hint.style.opacity=reduce?0:clamp(1-p*6)*.9;
-    const sh=reduce?1:ss(.16,.5,p); hero.style.setProperty('--fade',reduce?'1':(1-ss(.82,1,p)*.85).toFixed(3)); hero.style.setProperty('--shop',sh.toFixed(3)); if(shopEl) shopEl.classList.toggle('on',sh>.5);
+    const sh=reduce?1:ss(.16,.5,p); hero.style.setProperty('--shop',sh.toFixed(3)); if(shopEl) shopEl.classList.toggle('on',sh>.5);
   }
   function tempFrame(p){
-    temp.style.setProperty('--p',p.toFixed(4)); temp.style.setProperty('--fade',reduce?'1':(1-ss(.8,1,p)*.85).toFixed(3));
+    temp.style.setProperty('--p',p.toFixed(4));
     let k,c;
     if(p<.4){const t=ss(.06,.34,p);k=2700+t*1300;c=mixHex('#FFA068','#F6F2EC',t)}
     else{const t=ss(.4,.68,p);k=4000+t*2500;c=mixHex('#F6F2EC','#687FFF',t)}
