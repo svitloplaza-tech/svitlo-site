@@ -8,7 +8,7 @@ export const revalidate = 3600; // оновлення даних каталог�
 export default async function Home() {
   const [t, kinds, hero] = await Promise.all([getTotals(), getKinds(),
     db.from("catalog_models").select("price_from").eq("code", "SP-P1228").maybeSingle()]);
-  const kindLinks = kinds.filter((k) => k.count > 0).map((k) => `<a href="/katalog/${k.slug}">${k.name_plural}</a>`).join("");
+  const kindLinks = kinds.filter((k) => k.count > 0).map((k) => `<a href="/katalog/${k.slug}"><b>${k.code}</b><span>${k.name_plural}</span><small>${k.count}</small></a>`).join("");
   const types = kinds.filter((k) => k.count > 0)
     .map((k) => `<a class="t rv" href="/katalog/${k.slug}"><b class="dotnum">${k.code}</b><span>${k.name_plural}</span></a>`).join("");
   const html = HOME_HTML.replace("{{TYPES}}", types)

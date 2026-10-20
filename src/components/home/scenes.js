@@ -187,7 +187,7 @@ export function initHome(root, Lenis){
   }
 
   /* ---------- Сцени ---------- */
-  const hero=$('.hero'), temp=$('.temp'), cat=$('.cat'), hint=$('#hint'), shopEl=$('.shop');
+  const hero=$('.hero'), temp=$('.temp'), cat=$('.cat'), hint=$('#hint'), shopEl=$('.shop'), sideEl=$('.side-kinds');
   const rK=$('#rK'), rW=$('#rW'), rP=$('#rP'), kv=$('#kv'), stages=[...root.querySelectorAll('#stages li')];
   const sp=$('#spectrum'); const cols=['#E168FF','#FFA068','#687FFF'];
   for(let i=0;i<34;i++){const e=document.createElement('i');e.style.height=(25+Math.abs(Math.sin(i*1.7))*75)+'%';e.style.background=cols[i%3];sp.appendChild(e)}
@@ -207,7 +207,7 @@ export function initHome(root, Lenis){
     const s=reduce?1:ss(.04,.45,p);
     rK.textContent=Math.round(s*4000); rW.textContent=Math.round(s*19); rP.textContent=Math.round(s*100);
     hint.style.opacity=reduce?0:clamp(1-p*6)*.9;
-    const sh=reduce?1:ss(.16,.5,p); hero.style.setProperty('--shop',sh.toFixed(3)); if(shopEl) shopEl.classList.toggle('on',sh>.5);
+    const sh=reduce?1:ss(.16,.5,p); hero.style.setProperty('--shop',sh.toFixed(3)); if(shopEl) shopEl.classList.toggle('on',sh>.5); if(sideEl) sideEl.classList.toggle('on',sh>.5);
   }
   function tempFrame(p){
     temp.style.setProperty('--p',p.toFixed(4));
