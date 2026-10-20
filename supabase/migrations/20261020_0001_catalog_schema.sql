@@ -1,0 +1,4 @@
+-- Застосовано в Supabase-проєкті svitlo-site (teidqxvftoihhwmubiyf) 20.10.2026 через Claude.
+-- Таблиці: kinds, series, models, variants, site_settings, social_accounts, social_posts, orders, order_items; RLS увімкнено.
+-- Повний текст див. в історії міграцій Supabase (Database → Migrations): catalog_schema, catalog_view_series_number.
+-- Каталог і налаштування — лише читання для відвідувачів; замовлення — без публічного доступу (пише сервер сайту).

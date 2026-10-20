@@ -1,0 +1,241 @@
+// @ts-nocheck
+// Анімація сцен головної: сфери SP-P1228, крапкова сітка, температура, паралакс (перенесено з прототипу).
+// Пізніше перший екран переводимо на Three.js + реальне фото/відео (рішення 20.10).
+export function initHome(root, Lenis){
+
+  document.documentElement.classList.add('js');
+  const $=s=>root.querySelector(s);
+  let alive=true; const offs=[];
+  const on=(t,ev,fn,o)=>{t.addEventListener(ev,fn,o);offs.push(()=>t.removeEventListener(ev,fn,o))};
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
+  const ss=(a,b,x)=>{const t=clamp((x-a)/(b-a));return t*t*(3-2*t)};
+  const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+  const mixA=(A,B,t)=>A.map((v,i)=>v+(B[i]-v)*t);
+  const rgb=(c,a=1)=>`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${a})`;
+  const mixHex=(a,b,t)=>'#'+mixA(hex(a),hex(b),t).map(v=>Math.round(v).toString(16).padStart(2,'0')).join('');
+
+  let lenis=null;
+  if(!reduce && Lenis){ try{ lenis=new Lenis({lerp:.09}); const raf=t=>{if(!alive)return;lenis.raf(t);requestAnimationFrame(raf)};requestAnimationFrame(raf);}catch(e){} }
+
+  /* ---------- Сфери: геометрія ---------- */
+  let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  function buildOrb(nArcs){
+    const arcs=[],leds=[];
+    for(let i=0;i<nArcs;i++){
+      const z=rnd()*2-1, a=rnd()*Math.PI*2, r=Math.sqrt(1-z*z);
+      const n=[r*Math.cos(a),r*Math.sin(a),z];
+      let u=Math.abs(n[0])<.9?[1,0,0]:[0,1,0];
+      const d=u[0]*n[0]+u[1]*n[1]+u[2]*n[2]; u=[u[0]-d*n[0],u[1]-d*n[1],u[2]-d*n[2]];
+      const ul=Math.hypot(...u); u=u.map(v=>v/ul);
+      const v=[n[1]*u[2]-n[2]*u[1],n[2]*u[0]-n[0]*u[2],n[0]*u[1]-n[1]*u[0]];
+      const rad=.9+rnd()*.1, start=rnd()*Math.PI*2, len=Math.PI*(1.1+rnd()*.9);
+      const pts=[]; const N=40;
+      for(let k=0;k<=N;k++){const t=start+len*k/N;pts.push([rad*(Math.cos(t)*u[0]+Math.sin(t)*v[0]),rad*(Math.cos(t)*u[1]+Math.sin(t)*v[1]),rad*(Math.cos(t)*u[2]+Math.sin(t)*v[2]),t])}
+      arcs.push({pts,ph:rnd()*6.28});
+      const nl=3+Math.floor(rnd()*3);
+      for(let k=0;k<nl;k++){const idx=2+Math.floor(rnd()*(N-4));leds.push({p:pts[idx],q:pts[idx+1],tw:rnd()*6.28})}
+    }
+    return {arcs,leds};
+  }
+  // далека (менша, вище, тьмяніша) малюється першою; ближня — більша, нижче
+  const ORBS=[
+    {g:buildOrb(14),x:.66,y:.27,mx:.70,my:.24,s:.55,depth:.5,spin:-.8,off:1.7,delay:.1,drift:.03,blur:1.2},
+    {g:buildOrb(18),x:.40,y:.42,mx:.40,my:.40,s:1,depth:1,spin:1,off:0,delay:0,drift:.09,blur:0}
+  ];
+  const FIN={
+    CH:{dark:hex('#2a2a2c'),mid:hex('#8d8f94'),hi:hex('#ffffff'),litTint:hex('#FFF2E2')},
+    GD:{dark:hex('#3a2a0e'),mid:hex('#B08A3A'),hi:hex('#FFE7A8'),litTint:hex('#FFE0B0')}
+  };
+  let finish='CH';
+  const LIGHT=hex('#FFF4E8');
+
+  /* ---------- Полотна ---------- */
+  const orb=$('#orb'), bg=$('#bg'), octx=orb.getContext('2d'), bctx=bg.getContext('2d');
+  const mask=document.createElement('canvas'), mctx=mask.getContext('2d');
+  let W=0,H=0,DPR=1,R0=0,dotTile=null,mobile=false;
+  function layout(){
+    ORBS.forEach(o=>{
+      o.R=R0*o.s;
+      o.cx=W*(mobile?o.mx:o.x);
+      o.cy0=Math.max(o.R+80,H*(mobile?o.my:o.y));
+    });
+  }
+  function size(){
+    DPR=Math.min(2,devicePixelRatio||1);
+    const r=orb.getBoundingClientRect(); W=r.width;H=r.height; mobile=W<720;
+    [orb,bg,mask].forEach(c=>{c.width=W*DPR;c.height=H*DPR});
+    octx.setTransform(DPR,0,0,DPR,0,0); bctx.setTransform(DPR,0,0,DPR,0,0); mctx.setTransform(DPR,0,0,DPR,0,0);
+    R0=mobile?Math.min(W*.36,H*.2):Math.min(W*.26,H*.27);
+    layout();
+    dotTile=document.createElement('canvas'); dotTile.width=W*DPR; dotTile.height=H*DPR;
+    const t=dotTile.getContext('2d'); t.setTransform(DPR,0,0,DPR,0,0); t.fillStyle='#fff';
+    for(let y=7;y<H;y+=14)for(let x=7;x<W;x+=14){t.beginPath();t.arc(x,y,1.25,0,6.283);t.fill()}
+    lastKey='';
+  }
+  const glow=document.createElement('canvas'); glow.width=glow.height=128;
+  (()=>{const g=glow.getContext('2d');const gr=g.createRadialGradient(64,64,0,64,64,64);
+    gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.12,'rgba(255,240,220,.85)');gr.addColorStop(.4,'rgba(255,170,110,.18)');gr.addColorStop(1,'rgba(255,120,60,0)');
+    g.fillStyle=gr;g.fillRect(0,0,128,128)})();
+
+  /* Крапки: сяйво від кожної сфери, яскравість і радіус ростуть зі світлом */
+  let lastKey='';
+  function drawDots(){
+    const key=ORBS.map(o=>o.lit.toFixed(3)+'|'+o.cy.toFixed(0)).join();
+    if(key===lastKey) return; lastKey=key;
+    mctx.globalCompositeOperation='source-over'; mctx.clearRect(0,0,W,H);
+    mctx.globalCompositeOperation='lighter';
+    for(const o of ORBS){
+      const reach=Math.max(W,H)*(.2+o.lit*.42)*(.55+o.s*.45);
+      const a0=(.06+o.lit*.55)*Math.sqrt(o.depth);
+      const g=mctx.createRadialGradient(o.cx,o.cy,o.R*.2,o.cx,o.cy,reach);
+      g.addColorStop(0,`rgba(0,0,0,${a0})`);g.addColorStop(.35,`rgba(0,0,0,${a0*.45})`);
+      g.addColorStop(.7,`rgba(0,0,0,${a0*.12})`);g.addColorStop(1,'rgba(0,0,0,0)');
+      mctx.fillStyle=g; mctx.fillRect(0,0,W,H);
+    }
+    bctx.globalCompositeOperation='source-over'; bctx.clearRect(0,0,W,H);
+    bctx.drawImage(dotTile,0,0,W,H);
+    bctx.globalCompositeOperation='destination-in'; bctx.drawImage(mask,0,0,W,H);
+    bctx.globalCompositeOperation='source-atop';
+    const n=ORBS[1], L=n.lit, reach=Math.max(W,H)*.7;
+    const tg=bctx.createRadialGradient(n.cx,n.cy,0,n.cx,n.cy,reach);
+    tg.addColorStop(0,rgb(mixA([200,200,200],[255,214,170],L)));
+    tg.addColorStop(1,rgb(mixA([150,150,150],[255,170,110],L*.6)));
+    bctx.fillStyle=tg; bctx.fillRect(0,0,W,H);
+    bctx.globalCompositeOperation='source-over';
+  }
+
+  /* Малювання однієї сфери */
+  let yaw=0, pitch=-.25, lit=0, time=0;
+  function project(p,o){
+    const yw=yaw*o.spin+o.off;
+    const c=Math.cos(yw),s=Math.sin(yw),cp=Math.cos(pitch),sp=Math.sin(pitch);
+    const x=p[0]*c+p[2]*s, z=-p[0]*s+p[2]*c, y=p[1];
+    const y2=y*cp-z*sp, z2=y*sp+z*cp, f=3.2/(3.2-z2);
+    return [o.cx+x*o.R*f, o.cy+y2*o.R*f, z2];
+  }
+  function drawOrb(o){
+    const F=FIN[finish], K=o.depth, L=o.lit;
+    if(o.blur&&'filter' in octx) octx.filter=`blur(${o.blur}px)`;
+    // підвіс
+    octx.strokeStyle=rgb(mixA([60,60,60],F.mid,.4),.9*K); octx.lineWidth=1.5*o.s;
+    octx.beginPath();octx.moveTo(o.cx,0);octx.lineTo(o.cx,o.cy-o.R*.9);octx.stroke();
+    octx.fillStyle=rgb(F.dark,K); octx.fillRect(o.cx-22*o.s,0,44*o.s,6);
+    if(L>0){
+      octx.globalCompositeOperation='lighter';
+      const s=o.R*(2.2+L*1.6);
+      octx.globalAlpha=L*.55*K; octx.drawImage(glow,o.cx-s,o.cy-s,s*2,s*2);
+      octx.globalAlpha=1; octx.globalCompositeOperation='source-over';
+    }
+    const segs=[];
+    for(const a of o.g.arcs){
+      let prev=project(a.pts[0],o);
+      for(let k=1;k<a.pts.length;k++){const cur=project(a.pts[k],o);segs.push([prev,cur,(prev[2]+cur[2])/2,a.pts[k][3]+a.ph]);prev=cur}
+    }
+    segs.sort((s1,s2)=>s1[2]-s2[2]);
+    const amb=.28+L*.72;
+    octx.lineCap='round';
+    for(const s of segs){
+      const front=(s[2]+1)/2;
+      const spec=Math.pow(Math.max(0,Math.sin(s[3]*2+yaw*3*o.spin)),6);
+      let c=mixA(F.dark,F.mid,front*amb);
+      c=mixA(c,F.hi,spec*(.25+L*.65)*front);
+      if(L>0) c=mixA(c,F.litTint,L*.25*front);
+      octx.strokeStyle=rgb(c,(.35+front*.65)*K);
+      octx.lineWidth=(o.R/150)*(1.1+front*1.6);
+      octx.beginPath();octx.moveTo(s[0][0],s[0][1]);octx.lineTo(s[1][0],s[1][1]);octx.stroke();
+    }
+    for(const l of o.g.leds){
+      const p=project(l.p,o), q=project(l.q,o), front=(p[2]+1)/2;
+      const tw=.85+.15*Math.sin(time*2+l.tw);
+      const a=L*(.25+front*.75)*tw*K;
+      octx.globalCompositeOperation='lighter';
+      if(a>0.01){
+        const s=o.R*(.10+.10*front)*(.6+L*.6);
+        octx.globalAlpha=a; octx.drawImage(glow,p[0]-s,p[1]-s,s*2,s*2);
+        if(front>.55&&L>.5&&o.depth>.8){octx.globalAlpha=a*.5;octx.strokeStyle=rgb(LIGHT);octx.lineWidth=1;
+          const k=s*1.4;octx.beginPath();octx.moveTo(p[0]-k,p[1]);octx.lineTo(p[0]+k,p[1]);octx.moveTo(p[0],p[1]-k);octx.lineTo(p[0],p[1]+k);octx.stroke()}
+      }
+      octx.globalAlpha=1; octx.globalCompositeOperation=a>.2?'lighter':'source-over';
+      octx.strokeStyle=a>.2?rgb(LIGHT,Math.min(1,a+.2)):rgb(F.mid,(.3+front*.5)*K);
+      octx.lineWidth=(o.R/150)*(2+front*2);
+      const mx=(q[0]-p[0])*.35,my=(q[1]-p[1])*.35;
+      octx.beginPath();octx.moveTo(p[0]-mx,p[1]-my);octx.lineTo(p[0]+mx,p[1]+my);octx.stroke();
+    }
+    octx.globalAlpha=1; octx.globalCompositeOperation='source-over';
+    if(o.blur&&'filter' in octx) octx.filter='none';
+  }
+  function drawScene(){
+    octx.clearRect(0,0,W,H);
+    for(const o of ORBS) drawOrb(o);
+  }
+
+  /* ---------- Сцени ---------- */
+  const hero=$('.hero'), temp=$('.temp'), cat=$('.cat'), hint=$('#hint');
+  const rK=$('#rK'), rW=$('#rW'), rP=$('#rP'), kv=$('#kv'), stages=[...root.querySelectorAll('#stages li')];
+  const sp=$('#spectrum'); const cols=['#E168FF','#FFA068','#687FFF'];
+  for(let i=0;i<34;i++){const e=document.createElement('i');e.style.height=(25+Math.abs(Math.sin(i*1.7))*75)+'%';e.style.background=cols[i%3];sp.appendChild(e)}
+  const prog=el=>{const r=el.getBoundingClientRect();return clamp(-r.top/(r.height-innerHeight||1))};
+
+  let heroP=0, heroVisible=true;
+  function heroState(p){
+    for(const o of ORBS){
+      let l=ss(.12+o.delay,.7+o.delay*.4,p);
+      const f0=.06+o.delay, f1=.2+o.delay;
+      if(p>f0&&p<f1&&!reduce){ l = Math.random()<.5 ? l*.15 : Math.max(l,.35*Math.random()); }
+      o.lit=reduce?1:l;
+      o.cy=o.cy0-(reduce?0:p)*H*o.drift;
+    }
+    lit=ORBS[1].lit;
+    hero.style.setProperty('--lit',lit.toFixed(3));
+    const s=reduce?1:ss(.12,.75,p);
+    rK.textContent=Math.round(s*4000); rW.textContent=Math.round(s*19); rP.textContent=Math.round(s*100);
+    hint.style.opacity=reduce?0:clamp(1-p*6)*.9;
+  }
+  function tempFrame(p){
+    temp.style.setProperty('--p',p.toFixed(4));
+    let k,c;
+    if(p<.5){const t=ss(.15,.45,p);k=2700+t*1300;c=mixHex('#FFA068','#F6F2EC',t)}
+    else{const t=ss(.55,.85,p);k=4000+t*2500;c=mixHex('#F6F2EC','#687FFF',t)}
+    temp.style.setProperty('--tc',c);
+    kv.textContent=Math.round(k/10)*10;
+    const idx=k<3350?0:k<5250?1:2; stages.forEach((li,i)=>li.classList.toggle('on',i===idx));
+  }
+  function onScroll(){
+    heroP=prog(hero); heroState(heroP);
+    tempFrame(reduce?0:prog(temp));
+    const r=cat.getBoundingClientRect(); cat.style.setProperty('--q',clamp((innerHeight-r.top)/(innerHeight+r.height)).toFixed(4));
+  }
+  let last=performance.now();
+  function loop(t){
+    const dt=Math.min(50,t-last); last=t; time+=dt/1000;
+    if(heroVisible){
+      if(!reduce) yaw = time*.12 + heroP*2.2;
+      drawScene(); drawDots();
+    }
+    if(alive)requestAnimationFrame(loop);
+  }
+  const hio=new IntersectionObserver(e=>{heroVisible=e[0].isIntersecting},{rootMargin:'100px'});hio.observe(hero);offs.push(()=>hio.disconnect());
+
+  // перемикач оздоблення
+
+
+  size(); onScroll();
+  on(window,'resize',()=>{size();onScroll();if(reduce){drawScene();drawDots()}});
+  on(window,'scroll',onScroll,{passive:true}); if(lenis) lenis.on('scroll',onScroll);
+  if(reduce){drawScene();drawDots()} else requestAnimationFrame(loop);
+
+  // появи + лічильники
+  const counted=new WeakSet();
+  const io=new IntersectionObserver(es=>es.forEach(e=>{ if(!e.isIntersecting) return; e.target.classList.add('in');
+    const n=e.target.querySelector('[data-count]');
+    if(n&&!counted.has(n)&&!reduce){counted.add(n);const to=+n.dataset.count,t0=performance.now();
+      const step=t=>{const k=clamp((t-t0)/1400);n.textContent=Math.round(to*(1-Math.pow(1-k,3))).toLocaleString('uk-UA');if(k<1)requestAnimationFrame(step)};requestAnimationFrame(step)}
+    io.unobserve(e.target)}),{threshold:.2});offs.push(()=>io.disconnect());
+  root.querySelectorAll('.rv').forEach(el=>io.observe(el));
+
+  root.querySelectorAll('.t').forEach(t=>t.addEventListener('pointermove',e=>{const r=t.getBoundingClientRect();t.style.setProperty('--mx',(e.clientX-r.left)+'px');t.style.setProperty('--my',(e.clientY-r.top)+'px')}));
+  root.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const el=document.querySelector(a.getAttribute('href'));if(el&&lenis){e.preventDefault();lenis.scrollTo(el)}}));
+
+  return ()=>{alive=false;offs.forEach(f=>f());if(lenis)lenis.destroy();document.documentElement.classList.remove('js');};
+}
