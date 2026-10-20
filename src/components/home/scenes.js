@@ -187,7 +187,7 @@ export function initHome(root, Lenis){
   }
 
   /* ---------- Сцени ---------- */
-  const hero=$('.hero'), temp=$('.temp'), cat=$('.cat'), hint=$('#hint');
+  const hero=$('.hero'), temp=$('.temp'), cat=$('.cat'), hint=$('#hint'), shopEl=$('.shop');
   const rK=$('#rK'), rW=$('#rW'), rP=$('#rP'), kv=$('#kv'), stages=[...root.querySelectorAll('#stages li')];
   const sp=$('#spectrum'); const cols=['#E168FF','#FFA068','#687FFF'];
   for(let i=0;i<34;i++){const e=document.createElement('i');e.style.height=(25+Math.abs(Math.sin(i*1.7))*75)+'%';e.style.background=cols[i%3];sp.appendChild(e)}
@@ -196,7 +196,7 @@ export function initHome(root, Lenis){
   let heroP=0, heroVisible=true;
   function heroState(p){
     for(const o of ORBS){
-      let l=ss(.12+o.delay,.7+o.delay*.4,p);
+      let l=ss(.06+o.delay,.55+o.delay*.4,p);
       const f0=.06+o.delay, f1=.2+o.delay;
       if(p>f0&&p<f1&&!reduce){ l = Math.random()<.5 ? l*.15 : Math.max(l,.35*Math.random()); }
       o.lit=reduce?1:l;
@@ -204,9 +204,10 @@ export function initHome(root, Lenis){
     }
     lit=ORBS[1].lit;
     hero.style.setProperty('--lit',lit.toFixed(3));
-    const s=reduce?1:ss(.12,.75,p);
+    const s=reduce?1:ss(.06,.6,p);
     rK.textContent=Math.round(s*4000); rW.textContent=Math.round(s*19); rP.textContent=Math.round(s*100);
     hint.style.opacity=reduce?0:clamp(1-p*6)*.9;
+    const sh=reduce?1:ss(.42,.7,p); hero.style.setProperty('--shop',sh.toFixed(3)); if(shopEl) shopEl.classList.toggle('on',sh>.5);
   }
   function tempFrame(p){
     temp.style.setProperty('--p',p.toFixed(4));
