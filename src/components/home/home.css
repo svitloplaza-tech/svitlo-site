@@ -126,3 +126,4 @@
 .home .side-kinds a:hover b{color:var(--sp-warm)}
 @media(max-width:900px){.home .side-kinds{display:none}}
 @media(prefers-reduced-motion:reduce){.home .side-kinds{transform:translateY(-50%)}}
+.home #orb.gl{mix-blend-mode:screen}

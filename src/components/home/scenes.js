@@ -1,6 +1,7 @@
 // @ts-nocheck
+import { createOrb3D, webglOK } from './orb3d';
 // Анімація сцен головної: сфери SP-P1228, крапкова сітка, температура, паралакс (перенесено з прототипу).
-// Пізніше перший екран переводимо на Three.js + реальне фото/відео (рішення 20.10).
+// Сфери малює WebGL (orb3d.js, 3D-модель); 2D-малювання нижче — запасний варіант без WebGL.
 export function initHome(root, Lenis){
 
   document.documentElement.classList.add('js');
@@ -51,7 +52,10 @@ export function initHome(root, Lenis){
   const LIGHT=hex('#FFF4E8');
 
   /* ---------- Полотна ---------- */
-  const orb=$('#orb'), bg=$('#bg'), octx=orb.getContext('2d'), bctx=bg.getContext('2d');
+  const orb=$('#orb'), bg=$('#bg'), bctx=bg.getContext('2d');
+  const use3d=webglOK(); let gl3=null, fade=0; // gl3 — рендер 3D-моделі, коли завантажиться
+  const octx=use3d?null:orb.getContext('2d');
+  if(use3d) orb.classList.add('gl');
   const mask=document.createElement('canvas'), mctx=mask.getContext('2d');
   let W=0,H=0,DPR=1,R0=0,dotTile=null,mobile=false;
   function layout(){
@@ -65,8 +69,10 @@ export function initHome(root, Lenis){
     const r=orb.getBoundingClientRect(); W=r.width;H=r.height; mobile=W<720;
     // Продуктивність: сфери — до 1.5x (на телефоні 1x), крапки й маска — завжди 1x
     DPR=mobile?1:Math.min(1.5,devicePixelRatio||1);
-    orb.width=W*DPR;orb.height=H*DPR;[bg,mask].forEach(c=>{c.width=W;c.height=H});
-    octx.setTransform(DPR,0,0,DPR,0,0); bctx.setTransform(1,0,0,1,0,0); mctx.setTransform(1,0,0,1,0,0);
+    if(octx){orb.width=W*DPR;orb.height=H*DPR;octx.setTransform(DPR,0,0,DPR,0,0)}
+    if(gl3) gl3.resize(W,H,DPR);
+    [bg,mask].forEach(c=>{c.width=W;c.height=H});
+    bctx.setTransform(1,0,0,1,0,0); mctx.setTransform(1,0,0,1,0,0);
     R0=mobile?Math.min(W*.36,H*.2):Math.min(W*.26,H*.27);
     layout();
     dotTile=document.createElement('canvas'); dotTile.width=W; dotTile.height=H;
@@ -174,7 +180,15 @@ export function initHome(root, Lenis){
     }
     c.globalAlpha=1; c.globalCompositeOperation='source-over';
   }
+  // легке обертання мишкою (ПК): нахил і доворот, згладжені
+  const tilt={x:0,z:0}, mouse={x:0,y:0}; let yawM=0;
   function drawScene(){
+    if(use3d){
+      if(!gl3) return;
+      tilt.x+=(mouse.y*.18-tilt.x)*.06; tilt.z+=(-mouse.x*.06-tilt.z)*.06; yawM+=(mouse.x*.5-yawM)*.06;
+      if(!reduce) fade=Math.min(1,fade+.04); else fade=1;
+      gl3.render(ORBS,yaw+yawM,tilt,fade); return;
+    }
     octx.clearRect(0,0,W,H);
     for(const o of ORBS){
       if(o.blur){
@@ -238,6 +252,11 @@ export function initHome(root, Lenis){
 
 
   size(); onScroll();
+  if(use3d){
+    createOrb3D(orb,{mobile,reduce}).then(r=>{ if(!alive){r.dispose();return} gl3=r; gl3.resize(W,H,DPR); if(reduce) drawScene(); })
+      .catch(e=>console.warn('3D',e));
+    if(!reduce) on(window,'pointermove',e=>{if(e.pointerType!=='mouse')return;mouse.x=e.clientX/innerWidth*2-1;mouse.y=e.clientY/innerHeight*2-1},{passive:true});
+  }
   // на телефонах resize спрацьовує від панелі адреси під час прокрутки — перебудовуємо лише при зміні ширини
   let lastW=innerWidth;
   on(window,'resize',()=>{if(Math.abs(innerWidth-lastW)<2&&mobile)return;lastW=innerWidth;size();onScroll();if(reduce){drawScene();drawDots()}});
@@ -256,5 +275,5 @@ export function initHome(root, Lenis){
   root.querySelectorAll('.t').forEach(t=>t.addEventListener('pointermove',e=>{const r=t.getBoundingClientRect();t.style.setProperty('--mx',(e.clientX-r.left)+'px');t.style.setProperty('--my',(e.clientY-r.top)+'px')}));
   root.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const el=document.querySelector(a.getAttribute('href'));if(el&&lenis){e.preventDefault();lenis.scrollTo(el)}}));
 
-  return ()=>{alive=false;window.__spHero=false;offs.forEach(f=>f());if(lenis)lenis.destroy();document.documentElement.classList.remove('js');};
+  return ()=>{alive=false;if(gl3)gl3.dispose();window.__spHero=false;offs.forEach(f=>f());if(lenis)lenis.destroy();document.documentElement.classList.remove('js');};
 }
