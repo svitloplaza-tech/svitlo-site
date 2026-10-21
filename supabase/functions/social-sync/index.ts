@@ -81,6 +81,34 @@ async function facebook(id: string, sec: Record<string, string>): Promise<Res> {
   return { items, followers: p.followers_count ?? null, feed_id: id };
 }
 
+// Ручна добірка: POST {"add": ["посилання на пост", …]} — бере og:image / og:description зі сторінки поста,
+// фото копіює в Storage, пише social_posts (source='manual', sort 100+порядок). Повторне посилання оновлює запис.
+const MON: Record<string, string> = { january: "01", february: "02", march: "03", april: "04", may: "05", june: "06", july: "07", august: "08", september: "09", october: "10", november: "11", december: "12" };
+const meta = (h: string, k: string) => unesc(h.match(new RegExp(`<meta[^>]+(?:property|name)="${k}"[^>]+content="([^"]*)"`))?.[1] ?? h.match(new RegExp(`<meta[^>]+content="([^"]*)"[^>]+(?:property|name)="${k}"`))?.[1] ?? "");
+async function og(url: string) {
+  const r = await fetch(url, { headers: { "user-agent": "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)", "accept-language": "uk,en;q=0.8" }, redirect: "follow" });
+  const h = await r.text();
+  const final = meta(h, "og:url") || r.url;
+  const desc = meta(h, "og:description") || meta(h, "description");
+  const d = desc.match(/ on (\w+) (\d{1,2}), (\d{4})/i); // «… on March 12, 2025: "підпис"»
+  const cap = desc.match(/:\s*["“](.*)["”]\.?\s*$/s)?.[1] ?? (meta(h, "og:title") || desc);
+  return { final, image: meta(h, "og:image"), caption: clip(cap.replace(/\s+/g, " ").trim() || null, 300),
+    published_at: d && MON[d[1].toLowerCase()] ? `${d[3]}-${MON[d[1].toLowerCase()]}-${d[2].padStart(2, "0")}` : null };
+}
+async function store(db: ReturnType<typeof createClient>, folder: string, id: string, srcs: string[]) {
+  for (const src of srcs) {
+    try {
+      const res = await fetch(src, { headers: { "user-agent": UA } });
+      if (!res.ok) continue;
+      const type = res.headers.get("content-type")?.split(";")[0] ?? "image/jpeg";
+      const path = `${folder}/${id.replace(/[^\w-]/g, "_")}.${type.includes("png") ? "png" : type.includes("webp") ? "webp" : "jpg"}`;
+      const up = await db.storage.from("social").upload(path, await res.arrayBuffer(), { contentType: type, upsert: true, cacheControl: "31536000" });
+      if (!up.error) return db.storage.from("social").getPublicUrl(path).data.publicUrl;
+    } catch { /* наступне джерело */ }
+  }
+  return null;
+}
+
 Deno.serve(async (req) => {
   const db = createClient(E("SUPABASE_URL"), E("SUPABASE_SERVICE_ROLE_KEY"), { auth: { persistSession: false } });
   const { data: ok } = await db.rpc("notify_secret_ok", { s: req.headers.get("x-notify-secret") ?? "" });
@@ -94,6 +122,27 @@ Deno.serve(async (req) => {
 
   if (q.get("dry")) { // перевірка без запису
     try { return json(await run(q.get("network") ?? "", q.get("id") ?? "", q.get("url") ?? "")); } catch (e) { return json({ error: String(e) }, 500); }
+  }
+
+  const body = await req.json().catch(() => ({}));
+  if (Array.isArray(body.add)) {
+    const out: unknown[] = [];
+    for (const [i, u] of (body.add as string[]).entries()) {
+      try {
+        const o = await og(u);
+        const network = /instagram\.com/.test(o.final) ? "instagram" : /facebook\.com|fb\.watch/.test(o.final) ? "facebook" : /youtu/.test(o.final) ? "youtube" : /t\.me/.test(o.final) ? "telegram" : "other";
+        const ext = o.final.match(/\/(?:p|reel|reels|videos|posts|watch)\/([\w-]+)/)?.[1] ?? o.final.replace(/\W+/g, "_").slice(-60);
+        if (!o.image) throw new Error("немає og:image (сторінка недоступна без входу?)");
+        const image = await store(db, `manual/${network}`, ext, [o.image]);
+        if (!image) throw new Error("не вдалося зберегти фото");
+        const row = { network, external_id: ext, url: o.final.split("?")[0], image, caption: o.caption, published_at: o.published_at,
+          media: /\/(reel|reels|videos|watch)\//.test(o.final) ? "video" : "image", source: "manual", sort: 100 + i, is_active: true };
+        const { error } = await db.from("social_posts").upsert(row, { onConflict: "network,external_id" });
+        if (error) throw error;
+        out.push({ url: u, ok: true, network, ext, caption: o.caption?.slice(0, 60), published_at: o.published_at });
+      } catch (e) { out.push({ url: u, ok: false, error: String(e) }); }
+    }
+    return json({ ok: true, added: out });
   }
 
   let accs = (await db.from("social_accounts").select("*").eq("feed", true).eq("is_active", true)).data ?? [];
