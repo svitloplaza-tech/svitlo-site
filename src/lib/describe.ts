@@ -100,10 +100,6 @@ export function describeModel(m: DModel, vs: DVariant[], s: DSeries): Texts {
   const p1: string[] = [];
   if (s?.intro) {
     p1.push(s.intro.trim());
-    if (!s.standalone && s.name) p1.push(pick(m.code, "s", [
-      `${name} — один із варіантів ${KIND_GEN[m.kind_code] ?? "світильника"} у серії ${cap(s.name.toLowerCase())}.`,
-      `У серії ${cap(s.name.toLowerCase())} ця модель — ${lc(m.kind_name)}.`,
-    ]));
   } else {
     const stem = m.kind_name.slice(0, 4).toLowerCase();
     if (!name.toLowerCase().startsWith(stem)) p1.push(`${name} — ${lc(m.kind_name)}.`);
