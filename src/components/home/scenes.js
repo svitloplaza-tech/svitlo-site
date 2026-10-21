@@ -232,8 +232,23 @@ export function initHome(root, Lenis){
     kv.textContent=Math.round(k/10)*10;
     const idx=k<3350?0:k<5250?1:2; stages.forEach((li,i)=>li.classList.toggle('on',i===idx));
   }
+  // напис першого екрана: розбиваємо на літери, щоб він розсіювався, коли наїжджає блок температури
+  const copy=$('.hero-copy');
+  (()=>{const h1=copy&&copy.querySelector('h1'); if(!h1) return; let sd=3; const r=()=>(sd=(sd*16807)%2147483647)/2147483647;
+    const walk=el=>[...el.childNodes].forEach(n=>{
+      if(n.nodeType===1){walk(n);return}
+      if(n.nodeType!==3||!n.textContent.trim()) return;
+      const frag=document.createDocumentFragment();
+      n.textContent.split(/(\s+)/).forEach(w=>{ if(!w) return; if(/^\s+$/.test(w)){frag.appendChild(document.createTextNode(w));return}
+        const ws=document.createElement('span'); ws.className='w';
+        for(const c of w){const e=document.createElement('span'); e.className='ch'; e.textContent=c; e.setAttribute('aria-hidden','true');
+          e.style.cssText=`--rx:${((r()-.5)*14).toFixed(2)}vw;--ry:${(-2-r()*12).toFixed(2)}vh;--rs:${(r()*.9-.35).toFixed(2)};--dl:${(r()*.55).toFixed(3)}`; ws.appendChild(e)}
+        frag.appendChild(ws)});
+      n.replaceWith(frag)});
+    h1.setAttribute('aria-label',h1.textContent.replace(/\s+/g,' ').trim()); walk(h1)})();
   function onScroll(){
     heroP=prog(hero); heroState(heroP);
+    if(copy&&!reduce){const tt=temp.getBoundingClientRect().top; copy.style.setProperty('--dis',clamp((innerHeight-tt)/(innerHeight*.6)).toFixed(4))}
     tempFrame(reduce?0:prog(temp));
     const r=cat.getBoundingClientRect(); cat.style.setProperty('--q',clamp((innerHeight-r.top)/(innerHeight+r.height)).toFixed(4));
   }
