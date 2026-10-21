@@ -4,13 +4,13 @@ import { db } from "@/lib/supabase";
 
 import { SocialAccounts, SocialPosts, type Acc, type Post } from "@/components/Social";
 
-export const revalidate = 3600; // оновлення даних каталогу щогодини
+export const revalidate = 3600; // пости оновлюються щоночі (social-sync), сторінка — щогодини
 export const metadata: Metadata = { title: "Ми в соцмережах", description: "Svitlo Plaza в Instagram, Facebook, TikTok та інших соцмережах." };
 
 export default async function SocialPage() {
   const [{ data: acc }, { data: posts }] = await Promise.all([
-    db.from("social_accounts").select("*").order("sort"),
-    db.from("social_posts").select("*").order("sort").order("published_at", { ascending: false }).limit(24),
+    db.from("social_accounts").select("id,network,handle,url,followers").order("sort"),
+    db.from("social_posts").select("id,network,url,image,caption,published_at,media").order("sort").order("published_at", { ascending: false }).limit(24),
   ]);
   return (
     <main className="wrap section">
