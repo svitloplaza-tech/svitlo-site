@@ -57,18 +57,18 @@ export async function createOrb3D(canvas, { mobile, reduce }) {
     const { id, n } = ledIds(geo);
     let sd = seed; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
     const B = [], PH = [];
-    for (let i = 0; i < n; i++) { const r = rnd(); B.push(r > 0.9 ? 1.5 + rnd() * 0.5 : 0.22 + Math.pow(rnd(), 1.7) * 1.05); PH.push(rnd() * 6.283); }
+    for (let i = 0; i < n; i++) { const r = rnd(); B.push(r > 0.9 ? 1.25 + rnd() * 0.3 : 0.3 + Math.pow(rnd(), 1.5) * 0.95); PH.push(rnd() * 6.283); }
     const b = new Float32Array(id.length), ph = new Float32Array(id.length);
     for (let k = 0; k < id.length; k++) { b[k] = B[id[k]]; ph[k] = PH[id[k]]; }
     const g = geo.clone();
     g.setAttribute("aB", new THREE.BufferAttribute(b, 1)); g.setAttribute("aPh", new THREE.BufferAttribute(ph, 1));
     return g;
   }
-  const COOL = new THREE.Color("#FFF6EC"), WARM = new THREE.Color("#FF8A3A"); // ≈5000K → ≈2200K
+  const COOL = new THREE.Color("#FFEBD2"), WARM = new THREE.Color("#FFA24A"); // ≈3600K у центрі → ≈2500K на краях
   function ledMat(additive) {
     return new THREE.ShaderMaterial({
-      uniforms: { uC: { value: new THREE.Vector3() }, uR: { value: 1 }, uLit: { value: 0 }, uBase: { value: 0.3 }, uGain: { value: 1.6 }, uDim: { value: 1 },
-        uT: { value: 0 }, uCool: { value: COOL.clone() }, uWarm: { value: WARM.clone() }, uFade: { value: 1 } },
+      uniforms: { uC: { value: new THREE.Vector3() }, uR: { value: 1 }, uLit: { value: 0 }, uBase: { value: 0.3 }, uGain: { value: P.gain }, uDim: { value: 1 },
+        uT: { value: 0 }, uCool: { value: COOL.clone() }, uWarm: { value: WARM.clone() }, uFade: { value: 1 }, uCtr: { value: P.ctr }, uRim: { value: P.rim } },
       vertexShader: `attribute float aB; attribute float aPh; uniform vec3 uC; uniform float uR, uT;
         varying float vR, vB, vZ;
         void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0);
@@ -76,12 +76,12 @@ export async function createOrb3D(canvas, { mobile, reduce }) {
           vZ = clamp((mv.z - uC.z) / uR * .5 + .5, 0., 1.); // 1 — передній бік
           vB = aB * (0.86 + 0.14 * sin(uT * (0.7 + fract(aPh) * 1.6) + aPh));
           gl_Position = projectionMatrix * mv; }`,
-      fragmentShader: `uniform float uLit, uBase, uGain, uDim, uFade; uniform vec3 uCool, uWarm; varying float vR, vB, vZ;
+      fragmentShader: `uniform float uLit, uBase, uGain, uDim, uFade, uCtr, uRim; uniform vec3 uCool, uWarm; varying float vR, vB, vZ;
         void main(){
-          float w = smoothstep(.05, 1., vR);
+          float w = smoothstep(.2, 1., vR);
           vec3 c = mix(uCool, uWarm, w * w * (3. - 2. * w) * .85 + w * .15);
           c = mix(vec3(.8), c, clamp(uLit * 1.5, 0., 1.)); // вимкнене — нейтральне
-          float k = uBase + uGain * uLit * vB * mix(.55, 1.15, vZ) * mix(1.25, .7, w); // центр яскравіший
+          float k = uBase + uGain * uLit * vB * mix(.75, 1.1, vZ) * mix(uCtr, uRim, w); // на краях кулі діоди видно збоку — щільніше й яскравіше (як на фото)
           gl_FragColor = vec4(c * k * uDim, uFade);
           #include <tonemapping_fragment>
           #include <colorspace_fragment>
@@ -93,19 +93,21 @@ export async function createOrb3D(canvas, { mobile, reduce }) {
   const haloTex = (() => {
     const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d");
     const gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
-    gr.addColorStop(0, "rgba(255,240,222,0.5)"); gr.addColorStop(0.22, "rgba(255,200,150,0.4)");
-    gr.addColorStop(0.45, "rgba(255,150,80,0.22)"); gr.addColorStop(0.7, "rgba(255,110,50,0.07)"); gr.addColorStop(1, "rgba(255,90,40,0)");
+    gr.addColorStop(0, "rgba(255,236,214,0.5)"); gr.addColorStop(0.3, "rgba(255,226,196,0.22)");
+    gr.addColorStop(0.6, "rgba(255,214,180,0.06)"); gr.addColorStop(1, "rgba(255,210,170,0)");
     g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
   })();
 
+  // налаштування світла (вибрано за фото живої кулі: читається каркас, діоди — дрібні теплі точки)
+  const P = { light: 0.3, env0: 0.1, env1: 0.3, gain: 1.6, glass: 0.15, halo: 0.1, bloom: 0.45, ctr: 0.4, rim: 3 };
   let orbSeed = 11;
   function makeOrb(dim) {
     const outer = new THREE.Group(), inner = new THREE.Group();
     outer.add(inner);
-    const chrome = new THREE.MeshStandardMaterial({ color: new THREE.Color(0.86, 0.87, 0.9).multiplyScalar(dim), metalness: 1, roughness: 0.16, envMap: env });
+    const chrome = new THREE.MeshStandardMaterial({ color: new THREE.Color(0.86, 0.87, 0.9).multiplyScalar(0.6 * dim) /* темніший хром — щоб читались діоди */, metalness: 1, roughness: 0.16, envMap: env });
     // каркас у світлі: білий у центрі кулі → теплий на краях (як і світлодіоди)
-    const cu = { uC: { value: new THREE.Vector3() }, uR: { value: 1 }, uLit: { value: 0 }, uTint: { value: new THREE.Color("#FFA45C") } };
+    const cu = { uC: { value: new THREE.Vector3() }, uR: { value: 1 }, uLit: { value: 0 }, uTint: { value: new THREE.Color("#FFC28A") } };
     chrome.onBeforeCompile = (sh) => {
       Object.assign(sh.uniforms, cu);
       sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform vec3 uC; uniform float uR; varying float vRr;")
@@ -114,7 +116,7 @@ export async function createOrb3D(canvas, { mobile, reduce }) {
         .replace("#include <opaque_fragment>", "outgoingLight *= mix(vec3(1.), uTint, smoothstep(.25, 1.05, vRr) * uLit);\n#include <opaque_fragment>");
     };
     chrome.customProgramCacheKey = () => "spchrome";
-    const glass = ledMat(true); glass.uniforms.uBase.value = 0.05; glass.uniforms.uGain.value = 0.45;
+    const glass = ledMat(true); glass.uniforms.uBase.value = 0.05; glass.uniforms.uGain.value = P.glass;
     const core = ledMat(false);
     const seed = (orbSeed += 7919);
     const parts = [["frame", chrome, inner], ["tubes", glass, inner], ["cores", core, inner], ["hanger", chrome, outer]];
@@ -141,7 +143,7 @@ export async function createOrb3D(canvas, { mobile, reduce }) {
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0, 0.35, 0.92);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0, 0.22, 0.9);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
 
@@ -157,7 +159,6 @@ export async function createOrb3D(canvas, { mobile, reduce }) {
 
   const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   // ORBS — масив зі scenes.js (далека, ближня); yaw — спільний кут, tilt — нахил від мишки
-  const P = { light: 1.4, env0: 0.1, env1: 0.5 };
   function render(ORBS, yaw, tilt, fade) {
     let maxLit = 0; const now = performance.now() / 1000;
     ORBS.forEach((o, i) => {
@@ -170,14 +171,15 @@ export async function createOrb3D(canvas, { mobile, reduce }) {
       const L = o.lit * fade, K = t.dim, S = t.outer.scale.x;
       t.outer.updateMatrixWorld(); const c = t.outer.getWorldPosition(new THREE.Vector3()).applyMatrix4(camera.matrixWorldInverse);
       for (const m of [t.core, t.glass]) { const u = m.uniforms; u.uC.value.copy(c); u.uR.value = MODEL_R * S; u.uLit.value = L; u.uDim.value = K; u.uT.value = now; u.uFade.value = fade; }
+      t.core.uniforms.uGain.value = P.gain; for (const m of [t.core, t.glass]) { m.uniforms.uCtr.value = P.ctr; m.uniforms.uRim.value = P.rim; } t.glass.uniforms.uGain.value = P.glass;
       t.cu.uC.value.copy(c); t.cu.uR.value = MODEL_R * S; t.cu.uLit.value = L;
       t.chrome.envMapIntensity = (P.env0 + P.env1 * L) * fade * (0.4 + 0.6 * K);
       t.light.intensity = L * K * P.light * S * S * 0.07;
-      t.warm.intensity = L * K * P.light * S * 0.5;
-      t.halo.material.opacity = L * K * 0.55 * (mobile ? 0.8 : 1);
+      t.warm.intensity = L * K * P.light * S * 0.3;
+      t.halo.material.opacity = L * K * P.halo;
       maxLit = Math.max(maxLit, L);
     });
-    bloom.strength = 0.55 * maxLit * (mobile ? 0.6 : 1);
+    bloom.strength = P.bloom * maxLit * (mobile ? 0.7 : 1);
     if (bloom.strength < 0.01) renderer.render(scene, camera); // без bloom дешевше
     else composer.render();
   }
