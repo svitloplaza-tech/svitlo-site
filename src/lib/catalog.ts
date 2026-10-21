@@ -6,6 +6,7 @@ export type CatalogModel = {
   code: string; slug: string; title: string; kind_code: string; series_id: string; series_name: string | null; series_number: number;
   photo: string | null; own: boolean; sort: number; price_from: number | null; in_stock: boolean;
   variants_count: number; colors: string[] | null;
+  facets?: import("./filters").Facets | null;
 };
 export type Variant = {
   sku: string; model_code: string; size: string | null; color: string | null; color_code: string | null; temp: string | null;
@@ -55,7 +56,7 @@ async function loadTotals() {
 }
 
 /** Усі моделі типу (до ~900 рядків), фільтруємо й гортаємо на сервері. */
-export function getCatalogByKind(kind: string): Promise<CatalogModel[]> { return memo("kind:" + kind, () => loadByKind(kind)); }
+export function getCatalogByKind(kind: string): Promise<CatalogModel[]> { return memo("kind2:" + kind, () => loadByKind(kind)); }
 async function loadByKind(kind: string): Promise<CatalogModel[]> {
   const out: CatalogModel[] = [];
   for (let from = 0; ; from += 1000) {

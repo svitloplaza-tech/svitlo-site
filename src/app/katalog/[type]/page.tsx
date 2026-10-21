@@ -4,7 +4,8 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import CatalogFilters from "@/components/CatalogFilters";
 import ModelCard from "@/components/ModelCard";
-import { FAMILIES, getCatalogByKind, getColorPhotos, getKinds, plural } from "@/lib/catalog";
+import { getCatalogByKind, getColorPhotos, getKinds, plural } from "@/lib/catalog";
+import { applyFilters } from "@/lib/filters";
 
 export const revalidate = 3600; // оновлення даних каталогу щогодини
 const PER = 48;
@@ -23,9 +24,8 @@ export default async function KindPage({ params, searchParams }: Props) {
   if (!kind) notFound();
   const [all, photos] = await Promise.all([getCatalogByKind(kind.code), getColorPhotos(kind.code)]);
 
-  const fam = (sp.kolir ?? "").split(",").filter(Boolean);
-  const tests = FAMILIES.filter((f) => fam.includes(f.id)).map((f) => f.test);
-  let list = all.filter((m) => (!tests.length || (m.colors ?? []).some((c) => tests.some((t) => t(c)))) && (sp.nayavnist !== "1" || m.in_stock));
+  const f = applyFilters(all, sp);
+  let list = f.result;
   if (sp.sort === "asc") list = [...list].sort((a, b) => (a.price_from ?? 1e9) - (b.price_from ?? 1e9));
   if (sp.sort === "desc") list = [...list].sort((a, b) => (b.price_from ?? 0) - (a.price_from ?? 0));
   const pages = Math.max(1, Math.ceil(list.length / PER));
@@ -52,7 +52,7 @@ export default async function KindPage({ params, searchParams }: Props) {
           ))}
         </nav>
       </div>
-      <Suspense><CatalogFilters /></Suspense>
+      <Suspense><CatalogFilters groups={f.groups} ranges={f.ranges} active={f.active} total={list.length} /></Suspense>
       <div className="wrap">
         <div className="count">{list.length ? `Знайдено: ${list.length} ${plural(list.length, ["модель", "моделі", "моделей"])}` : ""}</div>
         <div className="grid">
