@@ -23,10 +23,10 @@ export const REVALIDATE = 3600;
 const MEMO = new Map<string, { t: number; p: Promise<unknown> }>();
 const TTL = 10 * 60 * 1000;
 // + спільний кеш даних Next (KV) між усіма копіями воркера: оновлення раз на 3 год
-function memo<T>(key: string, fn: () => Promise<T>): Promise<T> {
+function memo<T>(key: string, fn: () => Promise<T>, shared = true): Promise<T> {
   const hit = MEMO.get(key), now = Date.now();
   if (hit && now - hit.t < TTL) return hit.p as Promise<T>;
-  const p = unstable_cache(fn, ["sp", key], { revalidate: 10800, tags: ["catalog"] })().catch((e) => { MEMO.delete(key); throw e; });
+  const p = (shared ? unstable_cache(fn, ["sp", key], { revalidate: 10800, tags: ["catalog"] })() : fn()).catch((e) => { MEMO.delete(key); throw e; });
   MEMO.set(key, { t: now, p });
   return p;
 }
@@ -63,7 +63,8 @@ async function loadByKind(kind: string): Promise<CatalogModel[]> {
   return out;
 }
 
-export async function getModel(slug: string) {
+export function getModel(slug: string) { return memo("model:" + slug.toLowerCase(), () => loadModel(slug), false); } // лише пам'ять: товарів багато, а записів у KV — 1000/добу
+async function loadModel(slug: string) {
   const { data: model } = await db.from("models").select("*").eq("slug", slug.toLowerCase()).eq("is_active", true).maybeSingle();
   if (!model) return null;
   const [{ data: variants }, { data: series }, { data: siblings }] = await Promise.all([

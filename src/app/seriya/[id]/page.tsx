@@ -5,8 +5,7 @@ import ModelCard from "@/components/ModelCard";
 import { db } from "@/lib/supabase";
 import { plural, type CatalogModel } from "@/lib/catalog";
 
-export const revalidate = 43200; // сторінка кешується (KV) і оновлюється раз на 12 год
-export const generateStaticParams = async () => []; // генерується при першому відкритті
+export const revalidate = 3600; // сторінка рендериться на запит (ISR для динамічних адрес в OpenNext вважає кеш застарілим щосекунди й писав би в KV на кожен перегляд); дані — з кешу в пам'яті
 type Props = { params: Promise<{ id: string }> };
 
 async function load(id: string) {
