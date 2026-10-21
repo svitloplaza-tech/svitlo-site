@@ -74,7 +74,6 @@ export default function ProductView({ model, variants }: { model: Model; variant
             variants_count: variants.length, colors: [...new Set(variants.map((v) => v.color).filter(Boolean))] as string[] }} />
         </div>
         <div className="notes"><div><b>Нова Пошта</b>Доставка по Україні</div><div><b>Оплата</b>Онлайн або накладеним платежем</div><div><b>Шоурум</b>Можна побачити наживо</div></div>
-        {model.description && <p className="desc">{model.description}</p>}
         <dl className="specs">
           {([["Артикул", cur.sku], ["Код моделі", model.code], ["Розмір", cur.size], ["Колір", cur.color], ["Колірна температура", cur.temp], ["Варіантів моделі", String(variants.length)]] as [string, string | null][])
             .filter(([, v]) => v).map(([a, b]) => (<div key={a} style={{ display: "contents" }}><dt>{a}</dt><dd>{b}</dd></div>))}

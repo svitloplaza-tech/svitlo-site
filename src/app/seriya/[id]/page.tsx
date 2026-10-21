@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ModelCard from "@/components/ModelCard";
 import { db } from "@/lib/supabase";
-import { plural, type CatalogModel } from "@/lib/catalog";
+import { getKinds, plural, type CatalogModel } from "@/lib/catalog";
+import { describeSeries, type DSeries } from "@/lib/describe";
 
 export const revalidate = 3600; // сторінка рендериться на запит (ISR для динамічних адрес в OpenNext вважає кеш застарілим щосекунди й писав би в KV на кожен перегляд); дані — з кешу в пам'яті
 type Props = { params: Promise<{ id: string }> };
@@ -13,11 +14,13 @@ async function load(id: string) {
   const { data: s } = await db.from("series").select("*").eq("id", sid).maybeSingle();
   if (!s) return null;
   const { data } = await db.from("catalog_models").select("*").eq("series_id", sid).order("sort");
-  return { s, models: (data ?? []) as CatalogModel[] };
+  const models = (data ?? []) as CatalogModel[];
+  const kinds = Object.fromEntries((await getKinds()).map((k) => [k.code, k.name]));
+  return { s, models, t: describeSeries(s as NonNullable<DSeries>, models, kinds) };
 }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const d = await load((await params).id);
-  return d ? { title: `Серія ${d.s.name ?? d.s.id}` } : {};
+  return d ? { title: d.t.title, description: d.t.desc, alternates: { canonical: `/seriya/${d.s.id.toLowerCase()}` } } : {};
 }
 export default async function SeriesPage({ params }: Props) {
   const d = await load((await params).id);
@@ -29,6 +32,7 @@ export default async function SeriesPage({ params }: Props) {
         <span className="chip"><b>{d.s.id}</b><span>Серія</span></span>
         <h1>{d.s.name ?? d.s.id} <span className="mute">{d.models.length} {plural(d.models.length, ["модель", "моделі", "моделей"])}</span></h1>
       </div>
+      <div className="about">{d.t.body.map((p, i) => <p key={i}>{p}</p>)}</div>
       <div className="grid">{d.models.map((m, i) => <ModelCard key={m.code} m={m} i={i} />)}</div>
     </main>
   );

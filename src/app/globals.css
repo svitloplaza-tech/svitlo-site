@@ -405,3 +405,8 @@ html.menu-open,html.menu-open body{overflow:hidden}
 .favlink:hover{color:var(--sp-warm)}
 .favlink b{position:absolute;right:-2px;top:-2px;background:var(--sp-warm);color:#000;border-radius:999px;min-width:18px;height:18px;display:grid;place-items:center;font:800 10px/1 var(--f-dot);padding:0 4px}
 @media(max-width:860px){.favlink{display:none}}
+/* Опис для Google (src/lib/describe.ts) — на сторінці товару й серії */
+.about{max-width:72ch;margin:40px 0 8px}
+.about h2{font-size:20px;margin:0 0 12px}
+.about p{color:rgba(255,255,255,.78);font-size:15px;line-height:1.65;margin:0 0 12px}
+.page-head + .about{margin:4px 0 28px}
