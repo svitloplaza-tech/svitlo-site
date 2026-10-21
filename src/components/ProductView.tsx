@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { addToCart } from "@/lib/cart";
+import FavButton from "@/components/FavButton";
 import { fmt, swatch, type Model, type Variant } from "@/lib/catalog";
 
 export default function ProductView({ model, variants }: { model: Model; variants: Variant[] }) {
@@ -68,6 +69,9 @@ export default function ProductView({ model, variants }: { model: Model; variant
             setAdded(true);
           }}>{added ? "Додано ✓" : "До кошика"}</button>
           <a className="btn btn-sec" href="/shourum">Подивитися в шоурумі</a>
+          <FavButton big item={{ code: model.code, slug: model.slug, title: model.title, photo: model.photo, in_stock: variants.some((v) => v.in_stock),
+            price_from: Math.min(...variants.map((v) => v.price ?? Infinity)) === Infinity ? null : Math.min(...variants.map((v) => v.price ?? Infinity)),
+            variants_count: variants.length, colors: [...new Set(variants.map((v) => v.color).filter(Boolean))] as string[] }} />
         </div>
         <div className="notes"><div><b>Нова Пошта</b>Доставка по Україні</div><div><b>Оплата</b>Онлайн або накладеним платежем</div><div><b>Шоурум</b>Можна побачити наживо</div></div>
         {model.description && <p className="desc">{model.description}</p>}

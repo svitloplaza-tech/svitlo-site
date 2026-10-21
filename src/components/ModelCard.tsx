@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { cardPhoto, fmt, swatch, type CatalogModel } from "@/lib/catalog";
+import FavButton from "@/components/FavButton";
 
 export default function ModelCard({ m, i = 0, photos }: { m: CatalogModel; i?: number; photos?: Record<string, string> }) {
   const cols = (m.colors ?? []).slice(0, 5);
@@ -12,6 +13,7 @@ export default function ModelCard({ m, i = 0, photos }: { m: CatalogModel; i?: n
     <Link className="card" href={`/p/${m.slug}`} style={{ animationDelay: `${Math.min(i, 12) * 40}ms` }}>
       <div className="ph">
         {!m.in_stock && <span className="badge out">НЕМАЄ</span>}
+        <FavButton item={{ code: m.code, slug: m.slug, title: m.title, photo: m.photo, price_from: m.price_from, in_stock: m.in_stock, variants_count: m.variants_count, colors: m.colors }} />
         {img && !bad && <img src={img} alt={m.title} loading="lazy" decoding="async" width={480} height={480}
           onError={() => { const o = m.photo; if (o && img !== o) setImg(o); else setBad(true); }} />}
       </div>

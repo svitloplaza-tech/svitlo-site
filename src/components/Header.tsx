@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cartCount, readCart } from "@/lib/cart";
+import { readFav } from "@/lib/fav";
 
 const KINDS = [
   ["L", "Люстри", "lyustry"], ["P", "Підвісні", "pidvisni"], ["W", "Бра", "bra"], ["C", "Стельові", "stelovi"],
@@ -22,6 +23,7 @@ export default function Header() {
   const path = usePathname();
   const router = useRouter();
   const [n, setN] = useState(0);
+  const [fv, setFv] = useState(0);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   // закриваємо меню при переході на іншу сторінку; блокуємо прокрутку під відкритим меню
@@ -33,11 +35,10 @@ export default function Header() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
   useEffect(() => {
-    const upd = () => setN(cartCount(readCart()));
+    const upd = () => { setN(cartCount(readCart())); setFv(readFav().length); };
     upd();
-    window.addEventListener("sp-cart", upd);
-    window.addEventListener("storage", upd);
-    return () => { window.removeEventListener("sp-cart", upd); window.removeEventListener("storage", upd); };
+    for (const e of ["sp-cart", "sp-fav", "storage"]) window.addEventListener(e, upd);
+    return () => { for (const e of ["sp-cart", "sp-fav", "storage"]) window.removeEventListener(e, upd); };
   }, []);
   return (
     <>
@@ -53,6 +54,10 @@ export default function Header() {
           <span aria-hidden="true">⌕</span>
           <input id="q" type="search" placeholder="Назва або код" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Пошук у каталозі" />
         </form>
+        <Link className="favlink" href="/obrane" aria-label={`Обране${fv ? `: ${fv}` : ""}`}>
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 20.5s-7.5-4.4-7.5-10.1A4.4 4.4 0 0 1 12 7.6a4.4 4.4 0 0 1 7.5 2.8c0 5.7-7.5 10.1-7.5 10.1z" fill={fv ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" /></svg>
+          {fv > 0 && <b>{fv}</b>}
+        </Link>
         <Link className="cart" href="/koshyk"><span>Кошик</span> <b aria-label="товарів у кошику">{n}</b></Link>
         <button type="button" className="burger" aria-label={open ? "Закрити меню" : "Відкрити меню"} aria-expanded={open} aria-controls="mmenu" onClick={() => setOpen(!open)}>
           <i /><i />
@@ -64,6 +69,7 @@ export default function Header() {
         <div className="wrap">
           <nav className="mm-main" aria-label="Мобільне меню">
             {NAV.map((l) => <Link key={l.href} href={l.href} onClick={() => setOpen(false)} aria-current={path?.startsWith(l.href) ? "page" : undefined}>{l.label}</Link>)}
+            <Link href="/obrane" onClick={() => setOpen(false)}>Обране{fv ? ` · ${fv}` : ""}</Link>
             <Link href="/koshyk" onClick={() => setOpen(false)}>Кошик{n ? ` · ${n}` : ""}</Link>
           </nav>
           <div className="mm-kinds">
