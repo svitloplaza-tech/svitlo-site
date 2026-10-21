@@ -10,7 +10,8 @@ export default async function Home() {
     db.from("catalog_models").select("price_from").eq("code", "SP-P1228").maybeSingle()]);
   const kindLinks = kinds.filter((k) => k.count > 0).map((k) => `<a href="/katalog/${k.slug}"><b>${k.code}</b><span>${k.name_plural}</span><small>${k.count}</small></a>`).join("");
   const types = kinds.filter((k) => k.count > 0)
-    .map((k) => `<a class="t rv" href="/katalog/${k.slug}"><b class="dotnum">${k.code}</b><span>${k.name_plural}</span></a>`).join("");
+    .map((k) => `<a class="t rv" href="/katalog/${k.slug}"><b class="dotnum">${k.code}</b><span>${k.name_plural}</span></a>`).join("")
+    + `<a class="t rv allser" href="/katalog/kolektsii"><b class="dotnum">K</b><span>Колекції</span></a>`;
   // три рухомі рядки з назв серій: рівномірна вибірка, кожна назва — посилання на свою серію
   const withImg = series.filter((x) => x.img);
   const pick = withImg.filter((_, i) => i % Math.max(1, Math.floor(withImg.length / 33)) === 0).slice(0, 33);

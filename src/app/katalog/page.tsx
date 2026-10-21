@@ -1,12 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getKinds, getTotals, fmt, plural } from "@/lib/catalog";
+import { getCollections, getKinds, getTotals, fmt, plural } from "@/lib/catalog";
 
 export const revalidate = 3600; // оновлення даних каталогу щогодини
 export const metadata: Metadata = { title: "Каталог світильників", description: "Люстри, підвісні, бра, стельові, настільні, торшери й вуличне світло Svitlo Plaza." };
 
 export default async function Catalog() {
-  const [kinds, t] = await Promise.all([getKinds(), getTotals()]);
+  const [kinds, t, cols] = await Promise.all([getKinds(), getTotals(), getCollections()]);
   return (
     <main className="wrap section">
       <div className="crumbs"><Link href="/">Головна</Link><span>/</span><span>Каталог</span></div>
@@ -20,6 +20,9 @@ export default async function Catalog() {
             <b>{k.code}</b><div><span>{k.name_plural}</span><br /><small>{fmt(k.count)} {plural(k.count, ["модель", "моделі", "моделей"])}</small></div>
           </Link>
         ))}
+        <Link className="kindcard allser" href="/katalog/kolektsii">
+          <b>K</b><div><span>Колекції</span><br /><small>{fmt(cols.length)} {plural(cols.length, ["серія", "серії", "серій"])} одного дизайну</small></div>
+        </Link>
       </div>
     </main>
   );

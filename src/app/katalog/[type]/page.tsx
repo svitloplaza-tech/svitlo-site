@@ -50,6 +50,7 @@ export default async function KindPage({ params, searchParams }: Props) {
           {kinds.filter((k) => k.count > 0).map((k) => (
             <Link key={k.code} className="type" href={`/katalog/${k.slug}`} aria-current={k.code === kind.code ? "page" : undefined}><b>{k.code}</b><span>{k.name_plural}</span></Link>
           ))}
+          <Link className="type allser" href="/katalog/kolektsii"><b>K</b><span>Колекції</span></Link>
         </nav>
       </div>
       <Suspense><CatalogFilters groups={f.groups} ranges={f.ranges} active={f.active} total={list.length} /></Suspense>

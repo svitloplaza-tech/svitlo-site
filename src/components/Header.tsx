@@ -17,6 +17,8 @@ const NAV = [
 ];
 
 export default function Header() {
+  // iOS вмикає :active (підсвітку при дотику) лише якщо є слухач touchstart
+  useEffect(() => { const f = () => {}; document.addEventListener("touchstart", f, { passive: true }); return () => document.removeEventListener("touchstart", f); }, []);
   const path = usePathname();
   const router = useRouter();
   const [n, setN] = useState(0);
@@ -67,6 +69,7 @@ export default function Header() {
           <div className="mm-kinds">
             <h4>Каталог</h4>
             {KINDS.map(([c, name, slug]) => <Link key={c} href={`/katalog/${slug}`} onClick={() => setOpen(false)}><b>{c}</b>{name}</Link>)}
+            <Link className="allser" href="/katalog/kolektsii" onClick={() => setOpen(false)}><b>K</b>Колекції</Link>
           </div>
         </div>
       </div>

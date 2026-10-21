@@ -150,3 +150,28 @@ export function cardPhoto(u: string | null | undefined): string | null {
   if (!u) return null;
   return u.includes("linef.com.ua/uploads/products/original/") ? u.replace("/original/", "/middle/") : u;
 }
+
+/* ---------- колекції (серії з кількох моделей) ---------- */
+export type Collection = { id: string; name: string; number: number; own: boolean; kinds: string[]; n: number; cover: string | null; tiles: string[] };
+export function getCollections(): Promise<Collection[]> { return memo("collections", loadCollections); }
+async function loadCollections(): Promise<Collection[]> {
+  const { data: ser } = await db.from("series").select("id,name,number,own").eq("standalone", false).order("number").limit(2000);
+  const rows: { series_id: string; kind_code: string; photo: string | null; photo_interior: string | null; sort: number }[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await db.from("models").select("series_id,kind_code,photo,photo_interior,sort").eq("is_active", true).order("sort").range(from, from + 999);
+    if (error) throw error;
+    rows.push(...(data ?? [])); if (!data || data.length < 1000) break;
+  }
+  const by = new Map<string, typeof rows>();
+  for (const r of rows) (by.get(r.series_id) ?? by.set(r.series_id, []).get(r.series_id)!).push(r);
+  const ok = (u: string | null) => !!u && u.includes("linef.com.ua"); // фото старого сайту поки не відкриваються
+  const ORDER = "LPCWTFO";
+  return ((ser ?? []) as { id: string; name: string | null; number: number; own: boolean }[]).flatMap((s) => {
+    const ms = by.get(s.id) ?? [];
+    if (ms.length < 2) return [];
+    const kinds = [...new Set(ms.map((m) => m.kind_code))].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
+    const cover = ms.find((m) => ok(m.photo_interior))?.photo_interior ?? null;
+    const tiles = ms.map((m) => m.photo).filter(ok).slice(0, 3).map((u) => cardPhoto(u)!);
+    return [{ id: s.id, name: s.name ?? `Серія ${s.number}`, number: s.number, own: s.own, kinds, n: ms.length, cover: cover ? cardPhoto(cover) : null, tiles }];
+  });
+}
