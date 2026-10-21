@@ -14,7 +14,7 @@ type Item = { external_id: string; url: string; image: string | null; caption: s
 type Res = { items: Item[]; followers?: number | null; feed_id?: string };
 
 const unesc = (s: string) => s.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")
-  .replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").trim();
+  .replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(+d)).replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").trim();
 const clip = (s: string | null | undefined, n = 300) => (s ? (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s) : null);
 const day = (s: string | null | undefined) => (s ? new Date(s).toISOString().slice(0, 10) : null);
 const num = (s: string) => { const m = s.replace(/\s/g, "").replace(",", ".").match(/([\d.]+)([KM]?)/i); if (!m) return null; return Math.round(parseFloat(m[1]) * ({ k: 1e3, m: 1e6 }[m[2].toLowerCase()] ?? 1)); };
@@ -92,7 +92,8 @@ async function og(url: string) {
   const desc = meta(h, "og:description") || meta(h, "description");
   const d = desc.match(/ on (\w+) (\d{1,2}), (\d{4})/i); // «… on March 12, 2025: "підпис"»
   const cap = desc.match(/:\s*["“](.*)["”]\.?\s*$/s)?.[1] ?? (meta(h, "og:title") || desc);
-  return { final, image: meta(h, "og:image"), caption: clip(cap.replace(/\s+/g, " ").trim() || null, 300),
+  const c = cap.replace(/\s+/g, " ").replace(/^[^|]*(?:перегляд|реакці|коментар|views|reactions|comments)[^|]*\|\s*/i, "").replace(/\s*\|\s*[^|]{1,40}$/, "").trim();
+  return { final, image: meta(h, "og:image"), caption: clip(c || null, 300),
     published_at: d && MON[d[1].toLowerCase()] ? `${d[3]}-${MON[d[1].toLowerCase()]}-${d[2].padStart(2, "0")}` : null };
 }
 async function store(db: ReturnType<typeof createClient>, folder: string, id: string, srcs: string[]) {
@@ -131,7 +132,7 @@ Deno.serve(async (req) => {
       try {
         const o = await og(u);
         const network = /instagram\.com/.test(o.final) ? "instagram" : /facebook\.com|fb\.watch/.test(o.final) ? "facebook" : /youtu/.test(o.final) ? "youtube" : /t\.me/.test(o.final) ? "telegram" : "other";
-        const ext = o.final.match(/\/(?:p|reel|reels|videos|posts|watch)\/([\w-]+)/)?.[1] ?? o.final.replace(/\W+/g, "_").slice(-60);
+        const ext = o.final.match(/facebook\.com\/.*?\/(\d{8,})\/?$/)?.[1] ?? o.final.match(/\/reel\/(\d{8,})/)?.[1] ?? o.final.match(/\/(?:p|reel|reels|videos|posts|watch)\/([\w-]+)/)?.[1] ?? o.final.replace(/\W+/g, "_").slice(-60);
         if (!o.image) throw new Error("немає og:image (сторінка недоступна без входу?)");
         const image = await store(db, `manual/${network}`, ext, [o.image]);
         if (!image) throw new Error("не вдалося зберегти фото");
