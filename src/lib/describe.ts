@@ -101,6 +101,7 @@ export function describeModel(m: DModel, vs: DVariant[], s: DSeries): Texts {
   const p1: string[] = [];
   if (m.seo?.lead) {
     p1.push(m.seo.lead.trim()); // ручний вступ моделі; факти нижче лишаються автоматичними й актуальними
+    if (s?.intro && !s.standalone) p1.push(s.intro.trim()); // для серій — ще й вступ серії, щоб нічого не втратити
   } else if (s?.intro) {
     p1.push(s.intro.trim());
   } else {
