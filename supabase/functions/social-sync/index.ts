@@ -1,6 +1,6 @@
 // Автостріччка соцмереж для /sotsmerezhi. Запускається щоночі (pg_cron 'social-sync' → social_sync_dispatch) або вручну.
 // Акаунти: social_accounts з feed = true. feed_id: YouTube — ID каналу (UC…; якщо порожньо — береться з url),
-// Telegram — ім'я каналу (без @; якщо порожньо — з url), Instagram — ID IG-акаунта (для META_PAGE_TOKEN), Facebook — ID сторінки.
+// Telegram — ім'я каналу (без @; якщо порожньо — з url), Instagram/Facebook — визначаються з токена сторінки самі.
 // Секрети (Vault, set_integration_secret): int_instagram_token (Instagram Login, оновлюється сам)
 //   або int_meta_page_token (токен сторінки Facebook — для FB і пов'язаного Instagram).
 // Фото копіюються в Storage-кошик 'social' (посилання соцмереж згодом прострочуються).
@@ -59,23 +59,26 @@ async function instagram(id: string, sec: Record<string, string>, db: ReturnType
     tok = sec.INSTAGRAM_TOKEN; base = "https://graph.instagram.com"; who = "me";
     const r = await fetch(`${base}/refresh_access_token?grant_type=ig_refresh_token&access_token=${tok}`).then((x) => x.json()).catch(() => null);
     if (r?.access_token && r.access_token !== tok) { tok = r.access_token; await db.rpc("set_integration_secret", { p_name: "instagram_token", p_value: tok }); }
-  } else if (sec.META_PAGE_TOKEN && id) { tok = sec.META_PAGE_TOKEN; base = "https://graph.facebook.com"; who = id; }
-  else throw new Error("instagram: немає токена (int_instagram_token або int_meta_page_token + feed_id)");
+  } else if (sec.META_PAGE_TOKEN) { tok = sec.META_PAGE_TOKEN; base = "https://graph.facebook.com";
+    who = id || (await (await get(`${base}/me?fields=instagram_business_account&access_token=${tok}`)).json()).instagram_business_account?.id;
+    if (!who) throw new Error("instagram: сторінка Facebook не пов'язана з професійним акаунтом Instagram"); }
+  else throw new Error("instagram: немає токена (int_instagram_token або int_meta_page_token)");
   const m = await (await get(`${base}/${who}/media?fields=${f}&limit=${KEEP}&access_token=${tok}`)).json();
   const p = await fetch(`${base}/${who}?fields=followers_count&access_token=${tok}`).then((x) => x.json()).catch(() => ({}));
   const items = (m.data ?? []).map((d: any) => ({ external_id: d.id, url: d.permalink, image: d.media_type === "VIDEO" ? d.thumbnail_url : d.media_url,
     caption: clip(d.caption), published_at: day(d.timestamp), media: d.media_type === "VIDEO" ? "video" : "image" }));
-  return { items, followers: p.followers_count ?? null };
+  return { items, followers: p.followers_count ?? null, feed_id: who === "me" ? undefined : who };
 }
 
 async function facebook(id: string, sec: Record<string, string>): Promise<Res> {
-  if (!sec.META_PAGE_TOKEN || !id) throw new Error("facebook: немає int_meta_page_token або feed_id (ID сторінки)");
+  if (!sec.META_PAGE_TOKEN) throw new Error("facebook: немає int_meta_page_token");
   const t = sec.META_PAGE_TOKEN, b = "https://graph.facebook.com";
+  id ||= (await (await get(`${b}/me?fields=id&access_token=${t}`)).json()).id; // токен сторінки → /me = сторінка
   const m = await (await get(`${b}/${id}/posts?fields=id,message,full_picture,permalink_url,created_time&limit=${KEEP}&access_token=${t}`)).json();
   const p = await fetch(`${b}/${id}?fields=followers_count&access_token=${t}`).then((x) => x.json()).catch(() => ({}));
   const items = (m.data ?? []).filter((d: any) => d.full_picture || d.message).map((d: any) => ({ external_id: d.id, url: d.permalink_url,
     image: d.full_picture ?? null, caption: clip(d.message), published_at: day(d.created_time), media: "image" }));
-  return { items, followers: p.followers_count ?? null };
+  return { items, followers: p.followers_count ?? null, feed_id: id };
 }
 
 Deno.serve(async (req) => {
