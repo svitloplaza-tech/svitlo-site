@@ -1,13 +1,14 @@
 /** Тексти для Google: title, meta description і опис на сторінці.
  *  Логіка: ручні тексти (models.seo / series.seo) → інакше збираємо з вступу серії (series.intro, пише людина/Claude)
  *  + фактів з бази (variants.specs, models.facets, опис Колекції). Лише факти з бази; биті значення відкидаються.
+ *  models.seo.lead — ручний вступ моделі замість вступу серії (факти лишаються авто); models.seo.body — повна заміна тексту.
  *  Гарантія 12 міс. — лише для вбудованого LED-модуля (рішення власника 21.10). */
 
 type Specs = Record<string, unknown> & { _dims?: { width?: number | null; height?: number | null; length?: number | null } };
 export type DVariant = { size: string | null; color: string | null; temp: string | null; price: number | null; in_stock: boolean; specs?: Specs | null };
 export type DModel = {
   code: string; title: string; kind_code: string; kind_name: string; description: string | null; own: boolean;
-  facets?: Record<string, unknown> | null; seo?: { title?: string; desc?: string; body?: string[] } | null;
+  facets?: Record<string, unknown> | null; seo?: { title?: string; desc?: string; lead?: string; body?: string[] } | null;
 };
 export type DSeries = { id: string; name: string | null; own: boolean; standalone: boolean; intro?: string | null;
   seo?: { title?: string; desc?: string; body?: string[] } | null } | null;
@@ -74,7 +75,7 @@ export function facts(m: DModel, vs: DVariant[]): Facts {
     led, sockets: sockets.filter((s) => s !== "LED"), lamps,
     mat: uniq([...arr(f.mat), ...sp("Матеріал корпусу"), ...(m.own ? field(m.description, "матеріали").split(/,\s*/) : [])].map(lc)),
     diffuser: sp("Матеріал розсіювача").map(lc),
-    temps, cct: tf.includes("cct") || temps.some((t) => /–|-/.test(t)), power,
+    temps, cct: temps.some((t) => /–|-/.test(t)) || (tf.includes("cct") && !temps.length), power,
     mount: mount ? lc(mount.replace(/монтажных/i, "монтажні")) : "",
     ip: sp("Ступінь захисту")[0] ?? "",
     rooms: arr(f.rooms).map((r) => ROOMS[r]).filter(Boolean),
@@ -98,7 +99,9 @@ export function describeModel(m: DModel, vs: DVariant[], s: DSeries): Texts {
 
   // 1) Вступ: вступ серії (для серії з кількох моделей він про серію — додаємо, яке місце модель у ній займає)
   const p1: string[] = [];
-  if (s?.intro) {
+  if (m.seo?.lead) {
+    p1.push(m.seo.lead.trim()); // ручний вступ моделі; факти нижче лишаються автоматичними й актуальними
+  } else if (s?.intro) {
     p1.push(s.intro.trim());
   } else {
     const stem = m.kind_name.slice(0, 4).toLowerCase();
