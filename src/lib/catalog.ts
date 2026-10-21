@@ -39,6 +39,11 @@ async function loadKinds(): Promise<(Kind & { count: number })[]> {
   return (kinds ?? []).map((k: Kind, i: number) => ({ ...k, count: counts[i].count ?? 0 }));
 }
 
+export function getSeriesNames(): Promise<{ id: string; name: string }[]> { return memo("seriesNames", loadSeriesNames); }
+async function loadSeriesNames() {
+  const { data } = await db.from("series").select("id,name").eq("standalone", false).not("name", "is", null).order("number").limit(1000);
+  return (data ?? []) as { id: string; name: string }[];
+}
 export function getTotals() { return memo("totals", loadTotals); }
 async function loadTotals() {
   const [s, m, v] = await Promise.all([

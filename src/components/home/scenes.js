@@ -205,6 +205,7 @@ export function initHome(root, Lenis){
   const rK=$('#rK'), rW=$('#rW'), rP=$('#rP'), kv=$('#kv'), stages=[...root.querySelectorAll('#stages li')];
   const sp=$('#spectrum'); const cols=['#E168FF','#FFA068','#687FFF'];
   for(let i=0;i<34;i++){const e=document.createElement('i');e.style.height=(25+Math.abs(Math.sin(i*1.7))*75)+'%';e.style.background=cols[i%3];sp.appendChild(e)}
+  const seriesLinks=[...root.querySelectorAll('.rows a')];
   const prog=el=>{const r=el.getBoundingClientRect();return clamp(-r.top/(r.height-innerHeight||1))};
 
   let heroP=0, heroVisible=true;
@@ -260,6 +261,10 @@ export function initHome(root, Lenis){
     if(copy&&!reduce){const tt=temp.getBoundingClientRect().top; copy.style.setProperty('--dis',clamp((innerHeight-tt)/(innerHeight*.6)).toFixed(4))}
     tempFrame(reduce?0:prog(temp));
     const r=cat.getBoundingClientRect(); cat.style.setProperty('--q',clamp((innerHeight-r.top)/(innerHeight+r.height)).toFixed(4));
+    // підсвітка назви серії в центрі екрана (лише поки блок видно)
+    if(r.top<innerHeight&&r.bottom>0){ const cx=innerWidth/2, w=innerWidth*.22;
+      for(const el of seriesLinks){ const b=el.getBoundingClientRect(); const d=Math.abs((b.left+b.right)/2-cx);
+        el.style.setProperty('--hl',clamp(1-d/w).toFixed(3)); } }
   }
   let last=performance.now();
   function loop(t){
