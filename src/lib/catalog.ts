@@ -40,10 +40,17 @@ async function loadKinds(): Promise<(Kind & { count: number })[]> {
   return (kinds ?? []).map((k: Kind, i: number) => ({ ...k, count: counts[i].count ?? 0 }));
 }
 
-export function getSeriesNames(): Promise<{ id: string; name: string }[]> { return memo("seriesNames", loadSeriesNames); }
+/** Серії для рухомих рядків головної: назва + заставка (інтер'єрне фото першої моделі, як у PDF-каталозі). */
+export function getSeriesNames(): Promise<{ id: string; name: string; img: string | null }[]> { return memo("seriesNames2", loadSeriesNames); }
 async function loadSeriesNames() {
-  const { data } = await db.from("series").select("id,name").eq("standalone", false).not("name", "is", null).order("number").limit(1000);
-  return (data ?? []) as { id: string; name: string }[];
+  const [{ data: ser }, { data: pics }] = await Promise.all([
+    db.from("series").select("id,name").eq("standalone", false).not("name", "is", null).order("number").limit(1000),
+    // лише фото LineF: фото старого сайту з хмари не відкриваються
+    db.from("models").select("series_id,photo_interior,sort").eq("is_active", true).like("photo_interior", "%linef.com.ua%").order("sort").limit(3000),
+  ]);
+  const img = new Map<string, string>();
+  for (const p of (pics ?? []) as { series_id: string; photo_interior: string }[]) if (!img.has(p.series_id)) img.set(p.series_id, cardPhoto(p.photo_interior)!);
+  return ((ser ?? []) as { id: string; name: string }[]).map((x) => ({ ...x, img: img.get(x.id) ?? null }));
 }
 export function getTotals() { return memo("totals", loadTotals); }
 async function loadTotals() {
