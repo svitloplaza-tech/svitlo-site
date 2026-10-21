@@ -151,7 +151,7 @@
 @media(max-width:900px){
   .home #orb{z-index:2;pointer-events:none}
   .home .shop{z-index:1;transform-origin:50% 0;
-    transform:translateY(calc(-1 * (1 - var(--shop,0))*12vh + var(--p,0)*2vh - var(--lift,0px) - var(--rec,0)*14vh)) scale(calc(1 - var(--rec,0)*.2));
+    transform:translateY(calc(-1 * (1 - var(--shop,0))*12vh + var(--p,0)*2vh - var(--lift,0px) - var(--rec,0)*14vh));
     filter:blur(calc(var(--rec,0)*9px));opacity:calc(var(--shop,0)*(1 - var(--rec,0)))}
   .home .shop.gone{pointer-events:none}
 }
