@@ -5,7 +5,8 @@ import ModelCard from "@/components/ModelCard";
 import ProductView from "@/components/ProductView";
 import { getKinds, getModel } from "@/lib/catalog";
 
-export const revalidate = 3600; // оновлення даних каталогу щогодини
+export const revalidate = 43200; // сторінка кешується (KV) і оновлюється раз на 12 год
+export const generateStaticParams = async () => []; // генерується при першому відкритті
 type Props = { params: Promise<{ code: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { db } from "./supabase";
 
 export type Kind = { code: string; name: string; name_plural: string; slug: string; sort: number };
@@ -21,10 +22,11 @@ export const REVALIDATE = 3600;
  *  не перезапитуються з Supabase на кожну сторінку. Ціни/наявність оновлюються не пізніше ніж за TTL. */
 const MEMO = new Map<string, { t: number; p: Promise<unknown> }>();
 const TTL = 10 * 60 * 1000;
+// + спільний кеш даних Next (KV) між усіма копіями воркера: оновлення раз на 3 год
 function memo<T>(key: string, fn: () => Promise<T>): Promise<T> {
   const hit = MEMO.get(key), now = Date.now();
   if (hit && now - hit.t < TTL) return hit.p as Promise<T>;
-  const p = fn().catch((e) => { MEMO.delete(key); throw e; });
+  const p = unstable_cache(fn, ["sp", key], { revalidate: 10800, tags: ["catalog"] })().catch((e) => { MEMO.delete(key); throw e; });
   MEMO.set(key, { t: now, p });
   return p;
 }

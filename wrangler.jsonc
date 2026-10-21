@@ -6,6 +6,8 @@
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "svitlo-site" }],
+  // кеш OpenNext (сторінки ISR + unstable_cache); id з'явиться після першого деплою (автостворення)
+  "kv_namespaces": [{ "binding": "NEXT_INC_CACHE_KV" }],
   // Публічні змінні (не секрети). Секретний ключ Supabase додається в Cloudflare → Settings → Variables (Secret).
   "vars": {
     "NEXT_PUBLIC_SUPABASE_URL": "https://teidqxvftoihhwmubiyf.supabase.co",
