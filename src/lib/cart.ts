@@ -1,5 +1,5 @@
 "use client";
-// Кошик у браузері покупця (localStorage). Оформлення замовлення — наступний етап (сервер → Supabase → SalesDrive).
+// Кошик у браузері покупця (localStorage). Оформлення — src/components/Checkout.tsx → /api/order → Supabase create_order.
 export type CartItem = { sku: string; code: string; title: string; variant: string; price: number | null; photo: string | null; qty: number };
 const KEY = "sp-cart-v1";
 export function readCart(): CartItem[] {
