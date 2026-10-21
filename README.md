@@ -1,6 +1,6 @@
 # svitloplaza.store — сайт Svitlo Plaza
 
-Next.js 15 (App Router) + Supabase (проєкт **svitlo-site**, eu-central-1). Адмініструється через Claude Code.
+Next.js 16 (App Router) + Supabase (проєкт **svitlo-site**, eu-central-1). Адмініструється через Claude Code.
 
 ## Сторінки
 | Адреса | Що це |
