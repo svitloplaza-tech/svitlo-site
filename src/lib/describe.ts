@@ -122,7 +122,7 @@ export function describeModel(m: DModel, vs: DVariant[], s: DSeries): Texts {
   const body = [F.mat.length && `корпус — ${list(F.mat, 3)}`, F.diffuser.length && `розсіювач — ${list(F.diffuser, 2)}`].filter(Boolean);
   if (body.length) p2.push(cap(body.join(", ")) + ".");
   if (F.led) {
-    const t = F.cct ? "з перемиканням колірної температури" + (F.temps[0] ? ` (${F.temps[0].replace(/К$/, " K")})` : "")
+    const t = F.cct ? "з перемиканням колірної температури" + ((F.temps.find((x) => /–|-/.test(x)) ?? "") ? ` (${F.temps.find((x) => /–|-/.test(x))!.replace(/К$/, " K")})` : "")
       : F.temps.length > 1 ? `${F.temps.map((x) => x.replace(/К$/, " K")).sort().join(" або ")} залежно від варіанту`
       : F.temps.length ? F.temps[0].replace(/К$/, " K") : "";
     p2.push(`Світло — вбудований LED${F.power ? ` ${F.power}` : ""}${t ? ", " + t : ""}.`);
