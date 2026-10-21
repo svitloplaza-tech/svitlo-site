@@ -25,6 +25,8 @@ export default function Ambient() {
       if (!alive) return;
       // на головній, поки видно першу сцену, фон не малюємо (її canvas і так перекриває екран)
       if ((window as unknown as { __spHero?: boolean }).__spHero) { last = now; if (!reduce) raf = requestAnimationFrame(draw); return; }
+      // ~30 кадр/с (телефон ~24) і пауза у фоновій вкладці — фон не забирає ресурс у прокрутки й фото
+      if (!reduce && (document.hidden || now - last < (W < 720 ? 41 : 33))) { raf = requestAnimationFrame(draw); return; }
       const dt = Math.min(50, now - last); last = now; t += dt / 1000;
       const sy = scrollY; x.clearRect(0, 0, W, H); x.lineCap = "round";
       for (const p of ps) {

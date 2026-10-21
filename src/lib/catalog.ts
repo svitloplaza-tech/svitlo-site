@@ -17,14 +17,28 @@ export type Model = {
 
 export const REVALIDATE = 3600;
 
-export async function getKinds(): Promise<(Kind & { count: number })[]> {
+/** Кеш у пам'яті воркера (живе, поки Cloudflare тримає ізолят «теплим»): довідники й списки каталогу
+ *  не перезапитуються з Supabase на кожну сторінку. Ціни/наявність оновлюються не пізніше ніж за TTL. */
+const MEMO = new Map<string, { t: number; p: Promise<unknown> }>();
+const TTL = 10 * 60 * 1000;
+function memo<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const hit = MEMO.get(key), now = Date.now();
+  if (hit && now - hit.t < TTL) return hit.p as Promise<T>;
+  const p = fn().catch((e) => { MEMO.delete(key); throw e; });
+  MEMO.set(key, { t: now, p });
+  return p;
+}
+
+export function getKinds(): Promise<(Kind & { count: number })[]> { return memo("kinds", loadKinds); }
+async function loadKinds(): Promise<(Kind & { count: number })[]> {
   const { data: kinds } = await db.from("kinds").select("*").order("sort");
   const counts = await Promise.all((kinds ?? []).map((k: Kind) =>
     db.from("models").select("*", { count: "exact", head: true }).eq("kind_code", k.code).eq("is_active", true)));
   return (kinds ?? []).map((k: Kind, i: number) => ({ ...k, count: counts[i].count ?? 0 }));
 }
 
-export async function getTotals() {
+export function getTotals() { return memo("totals", loadTotals); }
+async function loadTotals() {
   const [s, m, v] = await Promise.all([
     db.from("series").select("*", { count: "exact", head: true }),
     db.from("models").select("*", { count: "exact", head: true }).eq("is_active", true),
@@ -34,7 +48,8 @@ export async function getTotals() {
 }
 
 /** Усі моделі типу (до ~900 рядків), фільтруємо й гортаємо на сервері. */
-export async function getCatalogByKind(kind: string): Promise<CatalogModel[]> {
+export function getCatalogByKind(kind: string): Promise<CatalogModel[]> { return memo("kind:" + kind, () => loadByKind(kind)); }
+async function loadByKind(kind: string): Promise<CatalogModel[]> {
   const out: CatalogModel[] = [];
   for (let from = 0; ; from += 1000) {
     const { data, error } = await db.from("catalog_models").select("*").eq("kind_code", kind)
@@ -98,7 +113,8 @@ export function plural(n: number, f: [string, string, string]) {
 }
 
 /** Фото кожного кольору моделі — для крапок на картках. */
-export async function getColorPhotos(kind: string): Promise<Record<string, Record<string, string>>> {
+export function getColorPhotos(kind: string): Promise<Record<string, Record<string, string>>> { return memo("photos:" + kind, () => loadColorPhotos(kind)); }
+async function loadColorPhotos(kind: string): Promise<Record<string, Record<string, string>>> {
   const out: Record<string, Record<string, string>> = {};
   for (let from = 0; ; from += 1000) {
     const { data, error } = await db.from("variants").select("model_code,color,photo,models!inner(kind_code)")
@@ -111,4 +127,10 @@ export async function getColorPhotos(kind: string): Promise<Record<string, Recor
     if (!data || data.length < 1000) break;
   }
   return out;
+}
+
+/** Фото для карток: у LineF є готова зменшена копія 480 px (~95 КБ замість ~290 КБ оригіналу). */
+export function cardPhoto(u: string | null | undefined): string | null {
+  if (!u) return null;
+  return u.includes("linef.com.ua/uploads/products/original/") ? u.replace("/original/", "/middle/") : u;
 }
