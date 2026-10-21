@@ -7,7 +7,10 @@ export default function Ambient() {
   const gRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const c = cRef.current!, g = gRef.current!, x = c.getContext("2d")!;
-    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // на телефоні порошинки статичні (малюються раз і при зміні розміру): анімоване повноекранне полотно
+    // забирало в телефона ресурс, потрібний для домальовування карток каталогу
+    const still = innerWidth < 720;
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches || still;
     type P = { x: number; y: number; z: number; len: number; ang: number; a: number; cool: boolean; vx: number; ph: number };
     let W = 0, H = 0, D = 1, ps: P[] = [], alive = true, raf = 0;
     const init = () => {
@@ -46,7 +49,11 @@ export default function Ambient() {
     init();
     let lw = innerWidth;
     const onResize = () => { if (innerWidth === lw && innerWidth < 720) return; lw = innerWidth; init(); if (reduce) draw(performance.now()); };
-    const onScroll = () => draw(performance.now());
+    // телефон: під час прокрутки полотно не перемальовуємо — лише зсуваємо сяйво (transform, раз на кадр)
+    let tk = 0;
+    const onScroll = still
+      ? () => { if (tk) return; tk = requestAnimationFrame(() => { tk = 0; g.style.transform = `translate3d(0,${(-scrollY * 0.04).toFixed(1)}px,0)`; }); }
+      : () => draw(performance.now());
     addEventListener("resize", onResize);
     if (reduce) { draw(performance.now()); addEventListener("scroll", onScroll, { passive: true }); }
     else raf = requestAnimationFrame(draw);
