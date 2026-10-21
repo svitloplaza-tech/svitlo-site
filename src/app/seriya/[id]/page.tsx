@@ -15,7 +15,7 @@ async function load(id: string) {
   if (!s) return null;
   const { data } = await db.from("catalog_models").select("*").eq("series_id", sid).order("sort");
   const models = (data ?? []) as CatalogModel[];
-  const kinds = Object.fromEntries((await getKinds()).map((k) => [k.code, k.name]));
+  const kinds = Object.fromEntries((await getKinds()).map((k) => [k.code, k.name_plural]));
   return { s, models, t: describeSeries(s as NonNullable<DSeries>, models, kinds) };
 }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
