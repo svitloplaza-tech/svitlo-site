@@ -248,6 +248,15 @@ export function initHome(root, Lenis){
     h1.setAttribute('aria-label',h1.textContent.replace(/\s+/g,' ').trim()); walk(h1)})();
   function onScroll(){
     heroP=prog(hero); heroState(heroP);
+    if(shopEl&&mobile&&!reduce){
+      // нижній край вікна без зсуву (у координатах екрана) і межа блоку температури
+      const sh=reduce?1:ss(.16,.5,heroP), st=shopEl.parentElement.getBoundingClientRect().top;
+      const bottom=st+shopEl.offsetTop+shopEl.offsetHeight+innerHeight*(heroP*.02-(1-sh)*.12); // як у CSS-transform
+      const tt=temp.getBoundingClientRect().top, edge=tt-10; // кнопки завжди над межею блоку
+      const lift=Math.max(0,bottom-edge), rec=clamp((innerHeight*.78-tt)/(innerHeight*.32)); // вікно біля кулі → у глибину
+      shopEl.style.setProperty('--lift',lift.toFixed(1)+'px'); shopEl.style.setProperty('--rec',rec.toFixed(3));
+      shopEl.classList.toggle('gone',rec>.4);
+    } else if(shopEl){shopEl.style.removeProperty('--lift');shopEl.style.removeProperty('--rec')}
     if(copy&&!reduce){const tt=temp.getBoundingClientRect().top; copy.style.setProperty('--dis',clamp((innerHeight-tt)/(innerHeight*.6)).toFixed(4))}
     tempFrame(reduce?0:prog(temp));
     const r=cat.getBoundingClientRect(); cat.style.setProperty('--q',clamp((innerHeight-r.top)/(innerHeight+r.height)).toFixed(4));
