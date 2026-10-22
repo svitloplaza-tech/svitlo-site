@@ -15,7 +15,7 @@ export default function CatalogFilters({ groups, ranges, active, total }: { grou
   const sort = sp.get("sort") ?? "pop";
 
   const go = (mut: (p: URLSearchParams) => void) => {
-    const p = new URLSearchParams(sp.toString()); mut(p); p.delete("page");
+    const p = new URLSearchParams(sp.toString()); mut(p); p.delete("page"); p.delete("n");
     start(() => router.push(`${path}${p.toString() ? `?${p}` : ""}`, { scroll: false }));
   };
   const toggle = (g: string, v: string) => go((p) => {

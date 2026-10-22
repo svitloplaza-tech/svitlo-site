@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { addToCart } from "@/lib/cart";
 import FavButton from "@/components/FavButton";
 import { fmt, swatch, type Model, type Variant } from "@/lib/catalog";
@@ -21,6 +21,10 @@ export default function ProductView({ model, variants }: { model: Model; variant
     if (!u || u === shown) return;
     setFade(true); setTimeout(() => { setShown(u); setFade(false); }, 180);
   };
+  // гортання фото: стрілки, свайп пальцем, клавіші ← →
+  const idx = Math.max(0, imgs.indexOf(shown ?? ""));
+  const step = (d: number) => { if (imgs.length > 1) show(imgs[(idx + d + imgs.length) % imgs.length]); };
+  const touch = useRef<{ x: number; y: number } | null>(null);
   const choose = (size: string | null, color: string | null) => {
     const v = variants.find((x) => x.size === size && x.color === color)
       ?? variants.find((x) => (size != null ? x.size === size : x.color === color)) ?? cur;
@@ -31,7 +35,21 @@ export default function ProductView({ model, variants }: { model: Model; variant
   return (
     <div className="pv">
       <div className="gal">
-        <div className="ph" id="big">{shown && <img src={shown} alt={model.title} className={fade ? "fade" : ""} />}</div>
+        <div className="ph" id="big" tabIndex={imgs.length > 1 ? 0 : undefined} aria-label={imgs.length > 1 ? "Фото товару, гортайте стрілками" : undefined}
+          onKeyDown={(e) => { if (e.key === "ArrowLeft") step(-1); if (e.key === "ArrowRight") step(1); }}
+          onTouchStart={(e) => { touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }}
+          onTouchEnd={(e) => {
+            const t = touch.current; touch.current = null; if (!t) return;
+            const dx = e.changedTouches[0].clientX - t.x, dy = e.changedTouches[0].clientY - t.y;
+            if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) step(dx < 0 ? 1 : -1);
+          }}>
+          {shown && <img src={shown} alt={model.title} className={fade ? "fade" : ""} draggable={false} />}
+          {imgs.length > 1 && (<>
+            <button type="button" className="nav prev" aria-label="Попереднє фото" onClick={() => step(-1)}>‹</button>
+            <button type="button" className="nav next" aria-label="Наступне фото" onClick={() => step(1)}>›</button>
+            <span className="cnt" aria-hidden="true">{idx + 1} / {imgs.length}</span>
+          </>)}
+        </div>
         {imgs.length > 1 && (
           <div className="thumbs">
             {imgs.map((u) => (
