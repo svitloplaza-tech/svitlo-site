@@ -30,12 +30,17 @@ export default async function KindPage({ params, searchParams }: Props) {
   if (sp.sort === "desc") list = [...list].sort((a, b) => (b.price_from ?? 0) - (a.price_from ?? 0));
   const pages = Math.max(1, Math.ceil(list.length / PER));
   const page = Math.min(pages, Math.max(1, Number(sp.page) || 1));
-  const shown = list.slice((page - 1) * PER, page * PER);
-  const href = (p: number) => {
-    const q = new URLSearchParams(Object.entries(sp).filter(([k, v]) => v && k !== "page") as [string, string][]);
+  // n — скільки сторінок поспіль показано (кнопка «Показати ще» дописує наступну, попередні лишаються)
+  const n = Math.min(pages - page + 1, Math.max(1, Number(sp.n) || 1));
+  const last = page + n - 1;
+  const shown = list.slice((page - 1) * PER, last * PER);
+  const href = (p: number, cnt = 1) => {
+    const q = new URLSearchParams(Object.entries(sp).filter(([k, v]) => v && k !== "page" && k !== "n") as [string, string][]);
     if (p > 1) q.set("page", String(p));
+    if (cnt > 1) q.set("n", String(cnt));
     return `/katalog/${type}${q.toString() ? `?${q}` : ""}`;
   };
+  const left = list.length - last * PER;
   const [first, ...rest] = kind.name_plural.split(" ");
 
   return (
@@ -60,9 +65,14 @@ export default async function KindPage({ params, searchParams }: Props) {
           {shown.length ? shown.map((m, i) => <ModelCard key={m.code} m={m} i={i} photos={photos[m.code]} />)
             : <div className="empty">За цими фільтрами нічого немає. Зніміть один із фільтрів.</div>}
         </div>
+        {left > 0 && (
+          <div className="more">
+            <Link href={href(page, n + 1)} scroll={false} rel="nofollow">Показати ще <b>{Math.min(PER, left)}</b></Link>
+          </div>
+        )}
         {pages > 1 && (
           <nav className="pager" aria-label="Сторінки">
-            {Array.from({ length: pages }, (_, i) => i + 1).map((p) => p === page
+            {Array.from({ length: pages }, (_, i) => i + 1).map((p) => p >= page && p <= last
               ? <span key={p} aria-current="page">{p}</span>
               : <Link key={p} href={href(p)}>{p}</Link>)}
           </nav>
