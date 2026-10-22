@@ -270,6 +270,8 @@ export function initHome(root, Lenis){
   function loop(t){
     const dt=Math.min(50,t-last); last=t; time+=dt/1000;
     if(heroVisible){
+      // самоперевірка: якщо розмір полотна змінився без події resize (розгортання вікна, масштаб, смуга прокрутки) — перебудовуємо, інакше куля розтягується
+      if(Math.abs(orb.clientWidth-W)>1||Math.abs(orb.clientHeight-H)>1||(!mobile&&Math.min(1.5,devicePixelRatio||1)!==DPR)){size();onScroll()}
       if(!reduce) yaw = time*.12 + heroP*2.2;
       drawScene(); drawDots();
     }
