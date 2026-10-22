@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cartCount, readCart } from "@/lib/cart";
 import { readFav } from "@/lib/fav";
+import { LOGO } from "@/lib/brand";
 
 const KINDS = [
   ["L", "Люстри", "lyustry"], ["P", "Підвісні", "pidvisni"], ["W", "Бра", "bra"], ["C", "Стельові", "stelovi"],
@@ -44,7 +45,7 @@ export default function Header() {
     <>
     <header>
       <div className="wrap">
-        <Link className="logo" href="/">Svitlo <i>●</i> Plaza</Link>
+        <Link className="logo" href="/" aria-label="Svitlo Plaza — на головну"><img src={LOGO} alt="Svitlo Plaza" /></Link>
         <nav className="main" aria-label="Головне меню">
           {NAV.map((l) => (
             <Link key={l.href} href={l.href} aria-current={path?.startsWith(l.href) ? "page" : undefined}>{l.label}</Link>
