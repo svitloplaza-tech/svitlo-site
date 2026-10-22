@@ -194,7 +194,8 @@ header{z-index:20}main,.toast{position:relative;z-index:1}.toast{position:fixed}
 .pager a,.pager span{min-width:40px;height:40px;display:grid;place-items:center;border-radius:999px;background:var(--sp-graphite);box-shadow:inset 0 0 0 1px var(--line);text-decoration:none;font:800 14px/1 var(--f-dot);padding-inline:12px}
 .pager [aria-current]{background:var(--sp-gray);box-shadow:inset 0 0 0 1px var(--sp-warm)}
 footer.site{position:relative;z-index:1;border-top:1px solid var(--line);padding-block:40px;color:var(--sp-mute);font-size:14px}
-footer.site .wrap{display:grid;grid-template-columns:2fr repeat(3,1fr);gap:24px}
+footer.site .wrap{display:grid;grid-template-columns:2fr repeat(4,1fr);gap:24px}
+@media(max-width:1100px) and (min-width:761px){footer.site .wrap{grid-template-columns:repeat(4,1fr)}footer.site .wrap>div:first-child{grid-column:1/-1}}
 footer.site h4{margin:0 0 10px;font:500 12px/1 var(--f-text);text-transform:uppercase;letter-spacing:.08em;color:var(--sp-white)}
 footer.site a{display:block;text-decoration:none;padding-block:3px}footer.site a:hover{color:var(--sp-white)}
 @media(max-width:760px){footer.site .wrap{grid-template-columns:1fr 1fr}}
@@ -420,6 +421,7 @@ html.menu-open,html.menu-open body{overflow:hidden}
 .ck-go:disabled{opacity:.6}
 .ck-err{color:var(--sp-ember);margin:12px 0 0;font-size:14px}
 .ck-note{color:var(--sp-mute);font-size:12px;margin:8px 0 0}
+.ck-note a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 .thanks{display:grid;gap:16px;max-width:760px;padding-bottom:96px}
 .thanks h1{font-size:clamp(32px,4.4vw,52px);font-weight:300;line-height:1.05}
 .thanks-box{display:grid;border-radius:18px;background:var(--sp-graphite);box-shadow:inset 0 0 0 1px var(--line);padding:8px 18px}
@@ -449,3 +451,15 @@ html.menu-open,html.menu-open body{overflow:hidden}
 .about h2{font-size:20px;margin:0 0 12px}
 .about p{color:rgba(255,255,255,.78);font-size:15px;line-height:1.65;margin:0 0 12px}
 .page-head + .about{margin:4px 0 28px}
+
+/* сторінки «Покупцям» */
+.prose{max-width:760px;color:var(--sp-mute);font-size:16px;line-height:1.65}
+.prose h2{color:var(--sp-white);font-size:22px;font-weight:500;line-height:1.25;margin:40px 0 12px}
+.prose h2:first-child{margin-top:0}
+.prose p{margin:0 0 12px}.prose b{color:var(--sp-white);font-weight:500}
+.prose ul,.prose ol{margin:0 0 12px;padding-left:22px}.prose li{margin-bottom:6px}
+.prose a{color:var(--sp-white);text-decoration:underline;text-decoration-color:var(--sp-warm);text-underline-offset:3px}
+.prose .upd{margin-top:40px;font-size:13px}
+.info-nav{display:flex;flex-wrap:wrap;gap:8px;max-width:760px;margin-top:48px;padding-top:24px;border-top:1px solid var(--line)}
+.info-nav a{padding:10px 16px;border-radius:999px;background:var(--sp-graphite);box-shadow:inset 0 0 0 1px var(--line);text-decoration:none;font-size:14px}
+.info-nav a:hover{box-shadow:inset 0 0 0 1px var(--sp-warm)}

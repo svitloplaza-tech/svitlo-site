@@ -164,7 +164,7 @@ export default function Checkout({ pay, showroom }: { pay: Pay; showroom: string
         <button type="button" className="btn btn-main ck-go" onClick={submit} disabled={sending}>
           {sending ? "Оформлюємо…" : pm === "mono" ? "Оформити й оплатити" : "Оформити замовлення"}
         </button>
-        <p className="ck-note">Натискаючи кнопку, ви погоджуєтеся з умовами доставки й повернення. Менеджер зателефонує для підтвердження.</p>
+        <p className="ck-note">Натискаючи кнопку, ви погоджуєтеся з умовами <a href="/dostavka" target="_blank">доставки</a>, <a href="/povernennia" target="_blank">повернення</a> та <a href="/konfidentsiinist" target="_blank">політикою конфіденційності</a>. Менеджер зателефонує для підтвердження.</p>
       </section>
     </div>
   );
