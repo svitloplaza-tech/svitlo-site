@@ -4,7 +4,7 @@
   --sp-black:#000;--sp-graphite:#111;--sp-card:#1A1A1A;--sp-gray:#3B3B3B;--sp-mute:#8A8A8A;--sp-white:#fff;--sp-paper:#F2F0ED;
   --sp-warm:#FFA068;--sp-ember:#FF6A2B;--sp-cool:#687FFF;
   --ok:#7FB58A;--line:rgba(255,255,255,.08);
-  --f-text:var(--font-inter-tight),'Golos Text',Arial,sans-serif;--f-dot:var(--font-doto),ui-monospace,monospace;
+  --f-text:var(--font-inter-tight),'Golos Text',Arial,sans-serif;--f-dot:var(--font-svitlo-pixel),var(--font-doto),ui-monospace,monospace;
   --gl:max(16px,env(safe-area-inset-left,0px));--gr:max(16px,env(safe-area-inset-right,0px));
   color-scheme:dark;
 }
@@ -24,6 +24,8 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rg
 header .wrap{display:flex;align-items:center;gap:24px;height:64px}
 .logo{font:500 18px/1 var(--f-text);text-decoration:none;white-space:nowrap}
 .logo i{font-style:normal;color:var(--sp-warm)}
+.logo{display:inline-flex;align-items:center;flex-shrink:0}.logo img{display:block;height:24px;width:auto}
+@media(max-width:520px){.logo img{height:15px}}
 nav.main{display:flex;gap:22px;font-size:14px;margin-right:auto}
 nav.main a{color:var(--sp-mute);text-decoration:none}
 nav.main a[aria-current]{color:var(--sp-white)}
