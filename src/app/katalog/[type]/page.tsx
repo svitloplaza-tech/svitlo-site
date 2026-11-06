@@ -66,7 +66,7 @@ export default async function KindPage({ params, searchParams }: Props) {
             : <div className="empty">За цими фільтрами нічого немає. Зніміть один із фільтрів.</div>}
         </div>
         {left > 0 && (
-          <div className="more">
+          <div className="loadmore">
             <Link href={href(page, n + 1)} scroll={false} rel="nofollow">Показати ще <b>{Math.min(PER, left)}</b></Link>
           </div>
         )}

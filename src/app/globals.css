@@ -185,12 +185,12 @@ header{z-index:20}main,.toast{position:relative;z-index:1}.toast{position:fixed}
 .kindcard:hover b{color:var(--sp-warm)}
 .kindcard span{font-size:18px}
 .kindcard small{color:var(--sp-mute);font-size:13px}
-.more{display:flex;justify-content:center;padding-bottom:20px}
-.more a{display:inline-flex;align-items:center;gap:10px;height:48px;padding-inline:28px;border-radius:999px;background:var(--sp-graphite);box-shadow:inset 0 0 0 1px var(--line);text-decoration:none;font-size:15px;transition:box-shadow .2s}
-.more a:hover{box-shadow:inset 0 0 0 1px var(--sp-warm)}
-.more a b{font:800 13px/1 var(--f-dot);color:var(--sp-mute)}
+.loadmore{display:flex;justify-content:center;padding-bottom:20px}
+.loadmore a{display:inline-flex;align-items:center;gap:10px;height:48px;padding-inline:28px;border-radius:999px;background:var(--sp-graphite);box-shadow:inset 0 0 0 1px var(--line);text-decoration:none;font-size:15px;transition:box-shadow .2s}
+.loadmore a:hover{box-shadow:inset 0 0 0 1px var(--sp-warm)}
+.loadmore a b{font:800 13px/1 var(--f-dot);color:var(--sp-mute)}
 .pager{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding-bottom:96px}
-.grid:has(+.more){padding-bottom:28px}
+.grid:has(+.loadmore){padding-bottom:28px}
 .pager a,.pager span{min-width:40px;height:40px;display:grid;place-items:center;border-radius:999px;background:var(--sp-graphite);box-shadow:inset 0 0 0 1px var(--line);text-decoration:none;font:800 14px/1 var(--f-dot);padding-inline:12px}
 .pager [aria-current]{background:var(--sp-gray);box-shadow:inset 0 0 0 1px var(--sp-warm)}
 footer.site{position:relative;z-index:1;border-top:1px solid var(--line);padding-block:40px;color:var(--sp-mute);font-size:14px}
