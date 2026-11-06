@@ -9,9 +9,9 @@ export default function ProductView({ model, variants }: { model: Model; variant
   const colors = useMemo(() => [...new Set(variants.map((v) => v.color).filter(Boolean) as string[])], [variants]);
   const [cur, setCur] = useState<Variant>(variants.find((v) => v.in_stock) ?? variants[0]);
   const imgs = useMemo(() => {
-    const a = [...new Set([...variants.map((v) => v.photo), model.photo].filter(Boolean) as string[])];
-    if (model.photo_interior && !a.includes(model.photo_interior)) a.push(model.photo_interior);
-    return a;
+    // головні фото варіантів → фото моделі → решта фото варіантів (variants.photos: ракурси, креслення, інтер'єри) → інтер'єр моделі
+    return [...new Set([...variants.map((v) => v.photo), model.photo, ...variants.flatMap((v) => v.photos ?? []), model.photo_interior]
+      .filter(Boolean) as string[])];
   }, [variants, model]);
   const [shown, setShown] = useState<string | null>(cur?.photo ?? model.photo);
   const [fade, setFade] = useState(false);
@@ -93,11 +93,16 @@ export default function ProductView({ model, variants }: { model: Model; variant
         </div>
         <div className="notes"><div><b>Нова Пошта</b>Доставка по Україні</div><div><b>Оплата</b>Онлайн або накладеним платежем</div><div><b>Шоурум</b>Можна побачити наживо</div></div>
         <dl className="specs">
-          {([["Артикул", cur.sku], ["Код моделі", model.code], ["Розмір", cur.size], ["Колір", cur.color], ["Колірна температура", cur.temp], ["Варіантів моделі", String(variants.length)]] as [string, string | null][])
+          {([["Артикул", cur.sku], ["Код моделі", model.code], ["Розмір", cur.size], ["Колір", cur.color], ["Колірна температура", cur.temp], ["Потужність", spec(cur, "Потужність")], ["Світловий потік", spec(cur, "Світловий потік")], ["Варіантів моделі", String(variants.length)]] as [string, string | null][])
             .filter(([, v]) => v).map(([a, b]) => (<div key={a} style={{ display: "contents" }}><dt>{a}</dt><dd>{b}</dd></div>))}
         </dl>
         <span className="perma">Постійна адреса товару: <b>svitloplaza.store/p/{model.slug}</b></span>
       </div>
     </div>
   );
+}
+
+function spec(v: Variant, k: string): string | null {
+  const x = v.specs?.[k];
+  return typeof x === "string" && x.trim() ? x : null;
 }

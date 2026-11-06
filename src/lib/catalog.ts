@@ -11,6 +11,7 @@ export type CatalogModel = {
 export type Variant = {
   sku: string; model_code: string; size: string | null; color: string | null; color_code: string | null; temp: string | null;
   price: number | null; old_price: number | null; availability: string | null; in_stock: boolean; photo: string | null; photos: string[];
+  specs?: Record<string, unknown> | null;
 };
 export type Model = {
   code: string; slug: string; series_id: string; kind_code: string; kind_name: string; title: string; description: string | null;
