@@ -34,6 +34,10 @@ nav.main a[aria-current]{color:var(--sp-white)}
 .search input{all:unset;flex:1;min-width:0;width:100%;color:var(--sp-white)}
 .cart{text-decoration:none;display:flex;align-items:center;gap:8px;font-size:14px;white-space:nowrap;background:none;border:0;cursor:pointer}
 .cart b{background:var(--sp-warm);color:#000;border-radius:999px;min-width:22px;height:22px;display:grid;place-items:center;font:800 12px/1 var(--f-dot)}
+.hphone{display:flex;align-items:center;gap:8px;color:var(--sp-white);text-decoration:none;font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.hphone svg{color:var(--sp-warm);flex-shrink:0}
+@media(hover:hover){.hphone:hover{color:var(--sp-warm)}}
+@media(max-width:1180px){.hphone span{display:none}}
 @media(max-width:860px){nav.main{display:none}.search{flex:1 1 0}}
 @media(max-width:520px){header .wrap{gap:12px}.cart span{display:none}}
 

@@ -11,6 +11,9 @@ const KINDS = [
   ["T", "Настільні", "nastilni"], ["F", "Торшери", "torshery"], ["O", "Вуличні", "vulychni"],
 ];
 
+const PHONE = "+380983834822";
+const PHONE_TXT = "+38 (098) 383-48-22";
+
 const NAV = [
   { href: "/katalog", label: "Каталог" },
   { href: "/shourum", label: "Шоурум" },
@@ -55,6 +58,7 @@ export default function Header() {
           <span aria-hidden="true">⌕</span>
           <input id="q" type="search" placeholder="Назва або код" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Пошук у каталозі" />
         </form>
+        <a className="hphone" href={`tel:${PHONE}`} aria-label={`Зателефонувати ${PHONE_TXT}`}><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6.6 3.5h2.6l1.3 4.1-2 1.4a12 12 0 0 0 6.5 6.5l1.4-2 4.1 1.3v2.6a2 2 0 0 1-2.2 2A16.6 16.6 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" /></svg><span>{PHONE_TXT}</span></a>
         <Link className="favlink" href="/obrane" aria-label={`Обране${fv ? `: ${fv}` : ""}`}>
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 20.5s-7.5-4.4-7.5-10.1A4.4 4.4 0 0 1 12 7.6a4.4 4.4 0 0 1 7.5 2.8c0 5.7-7.5 10.1-7.5 10.1z" fill={fv ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" /></svg>
           {fv > 0 && <b>{fv}</b>}
@@ -72,6 +76,7 @@ export default function Header() {
             {NAV.map((l) => <Link key={l.href} href={l.href} onClick={() => setOpen(false)} aria-current={path?.startsWith(l.href) ? "page" : undefined}>{l.label}</Link>)}
             <Link href="/obrane" onClick={() => setOpen(false)}>Обране{fv ? ` · ${fv}` : ""}</Link>
             <Link href="/koshyk" onClick={() => setOpen(false)}>Кошик{n ? ` · ${n}` : ""}</Link>
+            <a href={`tel:${PHONE}`}>{PHONE_TXT}</a>
           </nav>
           <div className="mm-kinds">
             <h4>Каталог</h4>
