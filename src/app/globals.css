@@ -42,12 +42,18 @@ nav.main a[aria-current]{color:var(--sp-white)}
 .search label{cursor:pointer;font-size:16px;line-height:1}
 @media(min-width:861px){
   .search{flex:0 0 auto;width:42px;padding:9px 13px;overflow:hidden;cursor:pointer;transition:width .45s cubic-bezier(.2,.8,.2,1),box-shadow .3s,background .3s}
+  .search:hover,.search:focus-within,.search:has(input:not(:placeholder-shown)){background:var(--sp-graphite)}
   .search input{opacity:0;transition:opacity .25s}
   .search:hover,.search:focus-within,.search:has(input:not(:placeholder-shown)){width:210px;cursor:text;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--sp-warm) 45%,transparent)}
   .search:hover input,.search:focus-within input,.search:has(input:not(:placeholder-shown)) input{opacity:1;transition-delay:.12s}
   .search:hover label,.search:focus-within label{color:var(--sp-warm)}
 }
 header .wrap>*{flex-shrink:0}
+/* вужчі ПК: поле не штовхає сусідів, а розкривається вліво поверх меню (займає в рядку лише 42px) */
+@media(min-width:861px) and (max-width:1300px){
+  .search{position:relative;z-index:2;transition:width .45s cubic-bezier(.2,.8,.2,1),margin .45s cubic-bezier(.2,.8,.2,1),box-shadow .3s}
+  .search:hover,.search:focus-within,.search:has(input:not(:placeholder-shown)){margin-left:-168px}
+}
 @media(max-width:860px){nav.main{display:none}.search{flex:1 1 0}}
 @media(max-width:520px){header .wrap{gap:12px}.cart span{display:none}}
 
