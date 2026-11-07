@@ -55,7 +55,7 @@ export default function Header() {
           ))}
         </nav>
         <form className="search" role="search" onSubmit={(e) => { e.preventDefault(); if (q.trim()) router.push(`/poshuk?q=${encodeURIComponent(q.trim())}`); }}>
-          <span aria-hidden="true">⌕</span>
+          <label htmlFor="q" aria-hidden="true">⌕</label>
           <input id="q" type="search" placeholder="Назва або код" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Пошук у каталозі" />
         </form>
         <a className="hphone" href={`tel:${PHONE}`} aria-label={`Зателефонувати ${PHONE_TXT}`}><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6.6 3.5h2.6l1.3 4.1-2 1.4a12 12 0 0 0 6.5 6.5l1.4-2 4.1 1.3v2.6a2 2 0 0 1-2.2 2A16.6 16.6 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" /></svg><span>{PHONE_TXT}</span></a>
