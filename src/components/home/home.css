@@ -2,7 +2,7 @@
 .home .stick{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
 .home #bg,.home #orb{position:absolute;inset:0;width:100%;height:100%;display:block}
 .home .hero-copy{position:absolute;left:0;right:0;bottom:6vh;text-align:center;display:grid;gap:16px;justify-items:center}
-.home .hero h1{font-size:clamp(32px,5.6vw,80px);line-height:1}
+.home .hero h1{font-size:clamp(32px,min(5.6vw,8.4vh),80px);line-height:1}
 .home .hero h1 .l2{display:block;color:var(--sp-mute);opacity:calc(.75 + var(--lit,0)*.25)}
 .home .readout{display:flex;gap:26px;align-items:baseline;font-size:12px;color:var(--sp-mute);text-transform:uppercase;letter-spacing:.08em;flex-wrap:wrap;justify-content:center}
 .home .readout .dotnum{font-size:26px;color:var(--sp-white);margin-right:4px}
