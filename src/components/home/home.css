@@ -159,10 +159,10 @@
 /* Грайливі літери + барвінкова дуга на «Змінюй свій» */
 .home .hero h1 .ch{rotate:0deg;translate:0 0;transition:rotate .35s cubic-bezier(.3,1.6,.5,1),translate .35s cubic-bezier(.3,1.6,.5,1)}
 @media(hover:hover){.home .hero h1 .ch:hover{rotate:var(--hr,8deg);translate:0 -.14em}}
-.home .hero h1 .hl .ch{--cy:color-mix(in srgb,#8E9BFF calc(70% + var(--lit,0)*30%),#fff);
-  background:linear-gradient(172deg,var(--cy) 0%,color-mix(in srgb,var(--cy) 55%,#fff) calc(var(--arc,40%)*.6),#fff var(--arc,40%));
+.home .hero h1 .hl .ch{--cy:color-mix(in srgb,#4F5DFF calc(75% + var(--lit,0)*25%),#8E9BFF);
+  background:linear-gradient(172deg,var(--cy) 0%,var(--cy) calc(var(--arc,40%)*.55),#7E8CFF calc(var(--arc,40%)*.85),#fff calc(var(--arc,40%) + 12%));
   -webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 -.06em .18em color-mix(in srgb,#687FFF calc(var(--lit,0)*55%),transparent))}
+  filter:drop-shadow(0 -.06em .18em color-mix(in srgb,#4F5DFF calc(var(--lit,0)*70%),transparent))}
 @media(prefers-reduced-motion:reduce){.home .hero h1 .ch{transform:none;opacity:1;rotate:0deg;translate:none;transition:none}.home .hero h1{filter:none}}
 
 /* Телефон: вікно магазину їде вгору разом із межею блоку температури (--lift, px), кнопки не перекриваються;
