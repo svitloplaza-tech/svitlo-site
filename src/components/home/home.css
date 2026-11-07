@@ -3,7 +3,7 @@
 .home #bg,.home #orb{position:absolute;inset:0;width:100%;height:100%;display:block}
 .home .hero-copy{position:absolute;left:0;right:0;bottom:6vh;text-align:center;display:grid;gap:16px;justify-items:center}
 .home .hero h1{font-size:clamp(32px,5.6vw,80px);line-height:1}
-.home .hero h1 .l2{display:block;color:var(--sp-mute);opacity:calc(.55 + var(--lit,0)*.45);filter:blur(calc((1 - var(--lit,0))*1.5px))}
+.home .hero h1 .l2{display:block;color:var(--sp-mute);opacity:calc(.75 + var(--lit,0)*.25)}
 .home .readout{display:flex;gap:26px;align-items:baseline;font-size:12px;color:var(--sp-mute);text-transform:uppercase;letter-spacing:.08em;flex-wrap:wrap;justify-content:center}
 .home .readout .dotnum{font-size:26px;color:var(--sp-white);margin-right:4px}
 .home .prod{position:absolute;left:var(--gl);top:calc(84px + env(safe-area-inset-top,0px));display:grid;gap:10px;font-size:13px;color:var(--sp-mute);max-width:220px}
