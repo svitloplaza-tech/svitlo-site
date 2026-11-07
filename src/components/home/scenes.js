@@ -247,8 +247,8 @@ export function initHome(root, Lenis){
         frag.appendChild(ws)});
       n.replaceWith(frag)});
     h1.setAttribute('aria-label',h1.textContent.replace(/\s+/g,' ').trim()); walk(h1);
-    // грайливість: кожна літера трохи нахилена й зсунута по висоті
-    h1.querySelectorAll('.ch').forEach(e=>{e.style.setProperty('--rot',((r()-.5)*7).toFixed(2)+'deg');e.style.setProperty('--by',((r()-.5)*.09).toFixed(3)+'em')});
+    // грайливість лише при наведенні: у спокої літери рівні, під курсором — підскок із нахилом
+    h1.querySelectorAll('.ch').forEach(e=>e.style.setProperty('--hr',((r()<.5?-1:1)*(6+r()*8)).toFixed(1)+'deg'));
     // «Змінюй свій»: ціанова дуга світла від кулі — посередині сильніша, до країв слабшає
     const hl=[...h1.querySelectorAll('.hl .ch')];
     hl.forEach((e,i)=>{const t=hl.length>1?i/(hl.length-1):.5, a=Math.sqrt(Math.max(0,1-(2*t-1)**2)); e.style.setProperty('--arc',(18+a*62).toFixed(1)+'%')})})();

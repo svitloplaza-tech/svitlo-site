@@ -157,8 +157,8 @@
 .home .hero h1{filter:blur(calc(var(--dis)*7px))}
 .home .readout{opacity:calc(1 - var(--dis)*1.6);transform:translateY(calc(var(--dis)*-3vh))}
 /* Грайливі літери + барвінкова дуга на «Змінюй свій» */
-.home .hero h1 .ch{rotate:var(--rot,0deg);translate:0 var(--by,0em);transition:rotate .35s cubic-bezier(.3,1.6,.5,1),translate .35s cubic-bezier(.3,1.6,.5,1)}
-@media(hover:hover){.home .hero h1 .ch:hover{rotate:calc(var(--rot,0deg)*-2.5);translate:0 -.14em}}
+.home .hero h1 .ch{rotate:0deg;translate:0 0;transition:rotate .35s cubic-bezier(.3,1.6,.5,1),translate .35s cubic-bezier(.3,1.6,.5,1)}
+@media(hover:hover){.home .hero h1 .ch:hover{rotate:var(--hr,8deg);translate:0 -.14em}}
 .home .hero h1 .hl .ch{--cy:color-mix(in srgb,#8E9BFF calc(70% + var(--lit,0)*30%),#fff);
   background:linear-gradient(172deg,var(--cy) 0%,color-mix(in srgb,var(--cy) 55%,#fff) calc(var(--arc,40%)*.6),#fff var(--arc,40%));
   -webkit-background-clip:text;background-clip:text;color:transparent;
