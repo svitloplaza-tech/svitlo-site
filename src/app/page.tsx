@@ -2,6 +2,9 @@ import HomeScenes from "@/components/HomeScenes";
 import { HOME_HTML } from "@/components/home/markup";
 import { fmt, getKinds, getSeriesNames, getTotals } from "@/lib/catalog";
 import { db } from "@/lib/supabase";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 export const revalidate = 3600; // оновлення даних каталогу щогодини
 

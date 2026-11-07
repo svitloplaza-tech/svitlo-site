@@ -14,7 +14,8 @@ type Props = { params: Promise<{ type: string }>; searchParams: Promise<Record<s
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { type } = await params;
   const k = (await getKinds()).find((x) => x.slug === type);
-  return k ? { title: `${k.name_plural} світильники`, description: `${k.name_plural} у каталозі Svitlo Plaza: ціни, наявність, доставка Новою Поштою.` } : {};
+  return k ? { title: `${k.name_plural} світильники`, description: `${k.name_plural} у каталозі Svitlo Plaza: ціни, наявність, доставка Новою Поштою.`,
+    alternates: { canonical: `/katalog/${k.slug}` } } : {};
 }
 
 export default async function KindPage({ params, searchParams }: Props) {

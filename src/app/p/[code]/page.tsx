@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import ModelCard from "@/components/ModelCard";
 import ProductView from "@/components/ProductView";
 import { getKinds, getModel } from "@/lib/catalog";
+import { absImg } from "@/lib/img";
 import { describeModel, type DModel, type DSeries, type DVariant } from "@/lib/describe";
 
 const texts = (d: NonNullable<Awaited<ReturnType<typeof getModel>>>) =>
@@ -18,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!d) return {};
   const t = texts(d);
   return { title: t.title, description: t.desc, alternates: { canonical: `/p/${d.model.slug}` },
-    openGraph: { images: d.model.photo ? [d.model.photo] : undefined } };
+    openGraph: { images: d.model.photo ? [absImg(d.model.photo)!] : undefined } };
 }
 
 /** Адреса /p/{код} — та сама, що в QR-кодах PDF-каталогу. */
@@ -31,7 +32,7 @@ export default async function ProductPage({ params }: Props) {
   const t = texts(d);
   const prices = d.variants.map((v) => v.price).filter((p): p is number => !!p);
   const ld = { "@context": "https://schema.org", "@type": "Product", name: d.model.title, sku: d.model.code, description: t.desc,
-    image: d.model.photo ? [d.model.photo] : undefined, brand: { "@type": "Brand", name: "Svitlo Plaza" },
+    image: [...new Set([d.model.photo, ...d.variants.map((v) => v.photo), d.model.photo_interior].map(absImg).filter(Boolean))].slice(0, 6), brand: { "@type": "Brand", name: "Svitlo Plaza" },
     offers: prices.length ? { "@type": "AggregateOffer", priceCurrency: "UAH", lowPrice: Math.min(...prices), highPrice: Math.max(...prices),
       offerCount: d.variants.length, availability: d.variants.some((v) => v.in_stock) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       url: `https://www.svitloplaza.store/p/${d.model.slug}` } : undefined };
