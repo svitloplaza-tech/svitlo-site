@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { img } from "@/lib/img";
 import { db } from "./supabase";
 
 export type Kind = { code: string; name: string; name_plural: string; slug: string; sort: number };
@@ -149,7 +150,7 @@ async function loadColorPhotos(kind: string): Promise<Record<string, Record<stri
 /** Фото для карток: у LineF є готова зменшена копія 480 px (~95 КБ замість ~290 КБ оригіналу). */
 export function cardPhoto(u: string | null | undefined): string | null {
   if (!u) return null;
-  return u.includes("linef.com.ua/uploads/products/original/") ? u.replace("/original/", "/middle/") : u;
+  return u.includes("linef.com.ua/uploads/products/original/") ? u.replace("/original/", "/middle/") : img(u);
 }
 
 /* ---------- колекції (серії з кількох моделей) ---------- */

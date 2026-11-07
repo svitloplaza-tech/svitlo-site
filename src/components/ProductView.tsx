@@ -3,6 +3,7 @@ import { useMemo, useRef, useState } from "react";
 import { addToCart } from "@/lib/cart";
 import FavButton from "@/components/FavButton";
 import { fmt, swatch, type Model, type Variant } from "@/lib/catalog";
+import { img } from "@/lib/img";
 
 export default function ProductView({ model, variants }: { model: Model; variants: Variant[] }) {
   const sizes = useMemo(() => [...new Set(variants.map((v) => v.size).filter(Boolean) as string[])].sort((a, b) => parseFloat(a) - parseFloat(b)), [variants]);
@@ -11,9 +12,9 @@ export default function ProductView({ model, variants }: { model: Model; variant
   const imgs = useMemo(() => {
     // головні фото варіантів → фото моделі → решта фото варіантів (variants.photos: ракурси, креслення, інтер'єри) → інтер'єр моделі
     return [...new Set([...variants.map((v) => v.photo), model.photo, ...variants.flatMap((v) => v.photos ?? []), model.photo_interior]
-      .filter(Boolean) as string[])];
+      .map(img).filter(Boolean) as string[])];
   }, [variants, model]);
-  const [shown, setShown] = useState<string | null>(cur?.photo ?? model.photo);
+  const [shown, setShown] = useState<string | null>(img(cur?.photo ?? model.photo));
   const [fade, setFade] = useState(false);
   const [added, setAdded] = useState(false);
 
@@ -28,7 +29,7 @@ export default function ProductView({ model, variants }: { model: Model; variant
   const choose = (size: string | null, color: string | null) => {
     const v = variants.find((x) => x.size === size && x.color === color)
       ?? variants.find((x) => (size != null ? x.size === size : x.color === color)) ?? cur;
-    setCur(v); show(v.photo); setAdded(false);
+    setCur(v); show(img(v.photo)); setAdded(false);
   };
   if (!cur) return <p className="mute">Варіанти цієї моделі тимчасово недоступні.</p>;
 
@@ -43,7 +44,7 @@ export default function ProductView({ model, variants }: { model: Model; variant
             const dx = e.changedTouches[0].clientX - t.x, dy = e.changedTouches[0].clientY - t.y;
             if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) step(dx < 0 ? 1 : -1);
           }}>
-          {shown && <img src={shown} alt={model.title} className={fade ? "fade" : ""} draggable={false} />}
+          {shown && <img src={shown} alt={`${model.title} ${model.code}${idx ? ` — фото ${idx + 1}` : ""}`} className={fade ? "fade" : ""} draggable={false} />}
           {imgs.length > 1 && (<>
             <button type="button" className="nav prev" aria-label="Попереднє фото" onClick={() => step(-1)}>‹</button>
             <button type="button" className="nav next" aria-label="Наступне фото" onClick={() => step(1)}>›</button>
@@ -52,8 +53,8 @@ export default function ProductView({ model, variants }: { model: Model; variant
         </div>
         {imgs.length > 1 && (
           <div className="thumbs">
-            {imgs.map((u) => (
-              <button key={u} type="button" aria-pressed={u === shown} onClick={() => show(u)} aria-label="Показати фото"><img src={u} alt="" loading="lazy" /></button>
+            {imgs.map((u, i) => (
+              <button key={u} type="button" aria-pressed={u === shown} onClick={() => show(u)} aria-label="Показати фото"><img src={u} alt={`${model.title} ${model.code} — фото ${i + 1}`} loading="lazy" /></button>
             ))}
           </div>
         )}

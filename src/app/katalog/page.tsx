@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getCollections, getKinds, getTotals, fmt, plural } from "@/lib/catalog";
 
 export const revalidate = 3600; // оновлення даних каталогу щогодини
-export const metadata: Metadata = { title: "Каталог світильників", description: "Люстри, підвісні, бра, стельові, настільні, торшери й вуличне світло Svitlo Plaza." };
+export const metadata: Metadata = { title: "Каталог світильників", description: "Люстри, підвісні, бра, стельові, настільні, торшери й вуличне світло Svitlo Plaza.", alternates: { canonical: "/katalog" } };
 
 export default async function Catalog() {
   const [kinds, t, cols] = await Promise.all([getKinds(), getTotals(), getCollections()]);

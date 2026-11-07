@@ -4,7 +4,7 @@ import CollectionsReveal from "@/components/CollectionsReveal";
 import { fmt, getCollections, getKinds, plural } from "@/lib/catalog";
 
 export const revalidate = 3600;
-export const metadata: Metadata = { title: "Колекції світильників", description: "Усі серії Svitlo Plaza: люстри, підвіси, бра й торшери одного дизайну." };
+export const metadata: Metadata = { title: "Колекції світильників", description: "Усі серії Svitlo Plaza: люстри, підвіси, бра й торшери одного дизайну.", alternates: { canonical: "/katalog/kolektsii" } };
 type Props = { searchParams: Promise<{ typ?: string }> };
 
 export default async function Collections({ searchParams }: Props) {

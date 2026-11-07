@@ -5,6 +5,7 @@ import ModelCard from "@/components/ModelCard";
 import { db } from "@/lib/supabase";
 import { getKinds, plural, type CatalogModel } from "@/lib/catalog";
 import { describeSeries, type DSeries } from "@/lib/describe";
+import { absImg } from "@/lib/img";
 
 export const revalidate = 3600; // сторінка рендериться на запит (ISR для динамічних адрес в OpenNext вважає кеш застарілим щосекунди й писав би в KV на кожен перегляд); дані — з кешу в пам'яті
 type Props = { params: Promise<{ id: string }> };
@@ -20,7 +21,8 @@ async function load(id: string) {
 }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const d = await load((await params).id);
-  return d ? { title: d.t.title, description: d.t.desc, alternates: { canonical: `/seriya/${d.s.id.toLowerCase()}` } } : {};
+  return d ? { title: d.t.title, description: d.t.desc, alternates: { canonical: `/seriya/${d.s.id.toLowerCase()}` },
+    openGraph: { images: d.models.find((m) => m.photo)?.photo ? [absImg(d.models.find((m) => m.photo)!.photo)!] : undefined } } : {};
 }
 export default async function SeriesPage({ params }: Props) {
   const d = await load((await params).id);
