@@ -246,7 +246,12 @@ export function initHome(root, Lenis){
           e.style.cssText=`--rx:${((r()-.5)*14).toFixed(2)}vw;--ry:${(-2-r()*12).toFixed(2)}vh;--rs:${(r()*.9-.35).toFixed(2)};--dl:${(r()*.55).toFixed(3)}`; ws.appendChild(e)}
         frag.appendChild(ws)});
       n.replaceWith(frag)});
-    h1.setAttribute('aria-label',h1.textContent.replace(/\s+/g,' ').trim()); walk(h1)})();
+    h1.setAttribute('aria-label',h1.textContent.replace(/\s+/g,' ').trim()); walk(h1);
+    // грайливість: кожна літера трохи нахилена й зсунута по висоті
+    h1.querySelectorAll('.ch').forEach(e=>{e.style.setProperty('--rot',((r()-.5)*7).toFixed(2)+'deg');e.style.setProperty('--by',((r()-.5)*.09).toFixed(3)+'em')});
+    // «Змінюй свій»: ціанова дуга світла від кулі — посередині сильніша, до країв слабшає
+    const hl=[...h1.querySelectorAll('.hl .ch')];
+    hl.forEach((e,i)=>{const t=hl.length>1?i/(hl.length-1):.5, a=Math.sqrt(Math.max(0,1-(2*t-1)**2)); e.style.setProperty('--arc',(18+a*62).toFixed(1)+'%')})})();
   function onScroll(){
     heroP=prog(hero); heroState(heroP);
     if(shopEl&&mobile&&!reduce){
