@@ -248,10 +248,7 @@ export function initHome(root, Lenis){
       n.replaceWith(frag)});
     h1.setAttribute('aria-label',h1.textContent.replace(/\s+/g,' ').trim()); walk(h1);
     // грайливість лише при наведенні: у спокої літери рівні, під курсором — підскок із нахилом
-    h1.querySelectorAll('.ch').forEach(e=>e.style.setProperty('--hr',((r()<.5?-1:1)*(6+r()*8)).toFixed(1)+'deg'));
-    // «Змінюй свій»: ціанова дуга світла від кулі — посередині сильніша, до країв слабшає
-    const hl=[...h1.querySelectorAll('.hl .ch')];
-    hl.forEach((e,i)=>{const t=hl.length>1?i/(hl.length-1):.5, a=Math.sqrt(Math.max(0,1-(2*t-1)**2)); e.style.setProperty('--arc',(35+a*55).toFixed(1)+'%')})})();
+    h1.querySelectorAll('.ch').forEach(e=>e.style.setProperty('--hr',((r()<.5?-1:1)*(6+r()*8)).toFixed(1)+'deg'));})();
   function onScroll(){
     heroP=prog(hero); heroState(heroP);
     if(shopEl&&mobile&&!reduce){
