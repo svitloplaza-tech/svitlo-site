@@ -54,6 +54,7 @@ header .wrap>*{flex-shrink:0}
   .search{position:relative;z-index:2;transition:width .45s cubic-bezier(.2,.8,.2,1),margin .45s cubic-bezier(.2,.8,.2,1),box-shadow .3s}
   .search:hover,.search:focus-within,.search:has(input:not(:placeholder-shown)){margin-left:-168px}
 }
+@media(min-width:861px) and (max-width:1000px){header .wrap{gap:16px}nav.main{gap:16px}.cart span{display:none}}
 @media(max-width:860px){nav.main{display:none}.search{flex:1 1 0}}
 @media(max-width:520px){header .wrap{gap:12px}.cart span{display:none}}
 
