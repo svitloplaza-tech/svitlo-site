@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 import Ambient from "@/components/Ambient";
 import "./globals.css";
 import { LOGO } from "@/lib/brand";
-import { INFO } from "@/components/InfoPage";
+import { ADDRESS, CONTACT_EMAIL, INFO, PHONE, SELLER } from "@/components/InfoPage";
 
 const inter = Inter_Tight({ subsets: ["latin", "cyrillic"], weight: ["300", "400", "500"], variable: "--font-inter-tight", display: "swap" });
 // Цифри: Svitlo Pixel — квадратні пікселі 5×7 (табло F1), шрифт бренду. Doto лишається запасним.
@@ -34,7 +34,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div><h4>Шоурум</h4><Link href="/shourum">Адреса й контакти</Link><Link href="/3d-tur">3D-тур</Link></div>
           <div><h4>Покупцям</h4>{INFO.map((i) => <Link key={i.href} href={i.href}>{i.label}</Link>)}</div>
           <div><h4>Ми</h4><Link href="/sotsmerezhi">Ми в соцмережах</Link><Link href="/koshyk">Кошик</Link></div>
-        </div></footer>
+        </div>
+        <div className="wrap legal">© {new Date().getFullYear()} Svitlo Plaza · {SELLER} · {ADDRESS} · <a href={`tel:${PHONE.replace(/[^+\d]/g, "")}`}>{PHONE}</a> · <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></div>
+        </footer>
       </body>
     </html>
   );
