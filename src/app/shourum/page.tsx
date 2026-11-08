@@ -27,7 +27,7 @@ export default async function Showroom() {
         <div><b>Телефон</b><a href={`tel:${phone.replace(/[^+\d]/g, "")}`}>{phone}</a></div>
       </div>
       <div className="cta" style={{ marginTop: 32, display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <a className="btn" href={MAPS_DIR} target="_blank" rel="noopener">Прокласти маршрут</a>
+        <a className="btn btn-main" href={MAPS_DIR} target="_blank" rel="noopener">Прокласти маршрут</a>
         <a className="btn btn-sec" href={MAPS_URL} target="_blank" rel="noopener">Відгуки в Google</a>
         <Link className="btn btn-sec" href="/3d-tur">3D-тур шоурумом</Link>
       </div>
