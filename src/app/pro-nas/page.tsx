@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import InfoPage, { Contacts, getShowroom, SELLER } from "@/components/InfoPage";
+import InfoPage, { Contacts, getShowroom, SELLER, SELLER_ID } from "@/components/InfoPage";
 
 export const revalidate = 3600;
 export const metadata: Metadata = {
@@ -29,7 +29,7 @@ export default async function Page() {
       </ul>
 
       <h2>Продавець і контакти</h2>
-      <p>Інтернет-магазин svitloplaza.store належить {SELLER}.</p>
+      <p>Інтернет-магазин svitloplaza.store належить {SELLER} (РНОКПП {SELLER_ID}, зареєстрований у ЄДР 01.04.1997; вид діяльності 47.59 — роздрібна торгівля освітлювальним приладдям і товарами для дому).</p>
       <Contacts s={s} />
     </InfoPage>
   );
