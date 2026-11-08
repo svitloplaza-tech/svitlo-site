@@ -11,8 +11,8 @@ const KINDS = [
   ["T", "Настільні", "nastilni"], ["F", "Торшери", "torshery"], ["O", "Вуличні", "vulychni"],
 ];
 
-const PHONE = "+380983834822";
-const PHONE_TXT = "+38 (098) 383-48-22";
+const PHONE = "+380983836014";
+const PHONE_TXT = "+38 (098) 383-60-14";
 
 const NAV = [
   { href: "/katalog", label: "Каталог" },

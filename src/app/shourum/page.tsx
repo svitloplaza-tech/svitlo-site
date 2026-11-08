@@ -26,6 +26,7 @@ export default async function Showroom() {
         <div><b>Години роботи</b>{s?.hours ?? "Уточнюються"}</div>
         <div><b>Телефон</b><a href={`tel:${phone.replace(/[^+\d]/g, "")}`}>{phone}</a></div>
       </div>
+      <p style={{ marginTop: 20, maxWidth: 820 }}>⚡ Працюємо щодня й під час відключень: у шоурумі завжди є світло, інтернет і тепло.</p>
       <div className="cta" style={{ marginTop: 32, display: "flex", gap: 12, flexWrap: "wrap" }}>
         <a className="btn btn-main" href={MAPS_DIR} target="_blank" rel="noopener">Прокласти маршрут</a>
         <a className="btn btn-sec" href={MAPS_URL} target="_blank" rel="noopener">Відгуки в Google</a>
