@@ -38,25 +38,93 @@ def opt(a, name, default=None):
 GKEY = True  # генеруємо тут: референс стискаємо, Gemini — через ai-gen?action=proxy (ключ лишається в Supabase)
 
 
-import random
-STYLES = ["Scandinavian", "warm minimalist", "Japandi", "modern classic with wall moldings", "contemporary with natural stone accents",
-          "soft modern with a curved sofa", "mid-century modern", "quiet luxury with travertine and walnut"]
-PLANTS = ["an olive tree in a terracotta pot", "a tall monstera", "a bird of paradise plant", "dried pampas grass in a floor vase",
-          "a small potted palm", "branches of eucalyptus in a glass vase", "a snake plant in a concrete planter"]
-WALLS = ["warm white", "greige", "soft sand", "light taupe", "pale sage green", "limewash beige"]
+import random, re
+# Сцени за референсами власника (08.11, Pinterest): описуємо стиль текстом, чужі фото в модель НЕ передаємо.
+OPEN_LIVING = ("Open-plan living room with a kitchen behind: greige handleless cabinets with warm LED strips under the wall cabinets and inside glass-front units, "
+               "marble backsplash, an island with two upholstered bar stools; herringbone light oak floor, a light curved modular sofa with a knitted throw, "
+               "a round dark wood coffee table with candles in glass lanterns and pampas grass, a soft shaggy rug, recessed downlights in the ceiling")
+LOFT_LIVING = ("Dark modern loft living room: charcoal grey modular corner sofa with patterned cushions and a plaid throw, black metal-frame coffee table "
+               "with stacked books and a small tray, grey textured rug, dark wood and black kitchen with a long island in the background, "
+               "brick-tile accent wall, black ceiling track spotlights, tall window with a balcony railing; camera slightly elevated looking down")
+JAPANDI_LIVING = ("Japandi living room: limewash plaster walls, hidden warm LED cove lighting along the ceiling, low oak furniture, linen sofa, "
+                  "rattan pouf, a bonsai and ceramic vases, wooden slat wall panel, jute rug, candles on a wooden tray")
+CLASSIC_LIVING = ("Parisian-style living room: white walls with classic moldings, herringbone parquet, white marble fireplace with a gilded mirror above, "
+                  "velvet sofa in sage or terracotta, brass side tables, fresh flowers, art books")
+BEDROOM = ("Calm Japandi-boho bedroom: warm beige plaster wall with hidden LED cove lighting, framed misty mountain print above a low wooden platform bed "
+           "with rumpled linen bedding and a fringed knitted throw, wooden slat panel and a dark glass wardrobe on the side, sheer curtains, "
+           "olive branches and pampas in ceramic vases, a woven basket, a jute rug, a rattan pouf, candles on a round wooden tray")
+INDUSTRIAL_DINING = ("Industrial loft dining room: grey concrete-effect wall panels, black-framed glass doors to the living room, a solid wood dining table "
+                     "with black X-shaped steel legs, cognac leather chairs on one side and grey upholstered chairs on the other, a large black wall clock, "
+                     "black floating shelves with small plants, a black vertical radiator, a black sideboard with a small desk lamp switched off, "
+                     "a distressed grey-black rug, pampas grass in a black vase on a tray")
+WARM_DINING = ("Warm open-plan kitchen-dining: oak dining table with linen runner, upholstered chairs, greige kitchen with marble backsplash and LED strips "
+               "behind, herringbone floor, ceramic tableware, dried flowers")
+SCANDI_DINING = "Scandinavian dining room: light oak table and wishbone chairs, white walls with framed prints, linen curtains, a sideboard with ceramics, a wool rug"
+KITCHEN = ("Modern greige kitchen with an island: handleless cabinets, illuminated glass-front cabinets, marble backsplash with warm LED strips, built-in oven, "
+           "island with a dark stone top and two upholstered bar stools, pampas grass in a ceramic vase on the counter, herringbone oak floor")
+DARK_KITCHEN = ("Dark contemporary kitchen: black and walnut cabinets, concrete countertop island with black metal bar stools, open shelves with jars and plants, "
+                "warm under-cabinet LED strips")
+HALLWAY = "Elegant hallway with a large round mirror, a slim oak console with ceramics and dried flowers, limewash walls, a runner rug"
+
+SCENES = {
+    "L": [f"{OPEN_LIVING}. The chandelier hangs above the coffee table", f"{LOFT_LIVING}. The chandelier hangs above the coffee table",
+          f"{JAPANDI_LIVING}. The chandelier hangs in the center of the room", f"{CLASSIC_LIVING}. The chandelier hangs in the center of the room",
+          f"{BEDROOM}. The chandelier hangs from the ceiling in the center of the bedroom, above the foot of the bed"],
+    "L_long": [f"{INDUSTRIAL_DINING}. The chandelier hangs about 80 cm above the dining table, its long side parallel to the table",
+               f"{WARM_DINING}. The chandelier hangs about 80 cm above the dining table, its long side parallel to the table",
+               f"{SCANDI_DINING}. The chandelier hangs about 80 cm above the dining table, its long side parallel to the table"],
+    "P_long": [f"{INDUSTRIAL_DINING}. The linear pendant hangs about 75 cm above the dining table, parallel to it",
+               f"{WARM_DINING}. The linear pendant hangs about 75 cm above the dining table, parallel to it",
+               f"{KITCHEN}. The linear pendant hangs about 75 cm above the island, parallel to it"],
+    "P_small": [f"{KITCHEN}. Three identical pendants hang in a row above the island", f"{DARK_KITCHEN}. Three identical pendants hang in a row above the island",
+                f"{INDUSTRIAL_DINING}. Three identical pendants hang in a row above the dining table",
+                f"{BEDROOM}. One pendant hangs low beside the bed above the bedside table"],
+    "P": [f"{WARM_DINING}. The pendant hangs about 75 cm above the table", f"{INDUSTRIAL_DINING}. The pendant hangs about 75 cm above the table",
+          f"{OPEN_LIVING}. The pendant hangs above the coffee table", f"{JAPANDI_LIVING}. The pendant hangs above a low dining table"],
+    "W": [f"{BEDROOM}. Two identical wall sconces are mounted on both sides of the bed at about 1.6 m", f"{HALLWAY}. Two identical wall sconces flank the mirror",
+          f"{LOFT_LIVING}. Two identical wall sconces are mounted on the accent wall above the sofa", f"{CLASSIC_LIVING}. Two identical wall sconces flank the fireplace mirror"],
+    "C": [f"{OPEN_LIVING}. The ceiling light is mounted flush on the ceiling", f"{BEDROOM}. The ceiling light is mounted flush on the ceiling", f"{HALLWAY}. The ceiling light is mounted flush on the ceiling"],
+    "F": [f"{JAPANDI_LIVING}. The floor lamp stands beside the sofa", f"{LOFT_LIVING}. The floor lamp stands beside the sofa", f"{BEDROOM}. The floor lamp stands in the corner by the window"],
+    "T": [f"{BEDROOM}. The table lamp stands on the bedside table", f"{CLASSIC_LIVING}. The table lamp stands on a brass side table", f"{INDUSTRIAL_DINING}. The table lamp stands on the black sideboard"],
+}
+LIGHT = ("Time of day: late evening — windows show a deep blue dusk or night sky with distant city lights, no daylight. The lamp from the reference is switched on "
+         "and is the main light source, warm 3000K glow with realistic light falloff and soft shadows; only subtle warm accent lighting elsewhere. ")
 
 
-def variation(code):
-    r = random.Random(f"{code}-{random.random()}")  # різні кадри для різних моделей і спроб
-    return (f"Interior style: {r.choice(STYLES)}, {r.choice(WALLS)} walls; use {r.choice(PLANTS)} instead of a fiddle-leaf fig. "
-            "Scale check: the lamp must look clearly smaller than the sofa or the table beneath it, with plenty of empty ceiling around it.")
+_turn = {}
+
+
+def pick(key):
+    """Сцени по черзі (з випадкового старту), щоб у партії не повторювався один стиль."""
+    i = _turn.setdefault(key, random.randrange(len(SCENES[key])))
+    _turn[key] = i + 1
+    return SCENES[key][i % len(SCENES[key])]
+
+
+def build_prompt(code, base):
+    """Сцена з SCENES (почергово/випадково), розміри — з промпту функції; кадр з функції лишаємо для O."""
+    kind = code.split("-")[1][0]
+    if kind == "O": return base
+    if kind == "L": key = "L_long" if "long side parallel" in base else "L"
+    elif kind == "P": key = "P_long" if "long side parallel" in base else "P_small" if "Three identical" in base else "P"
+    else: key = kind
+    lamp = {"L": "chandelier", "P": "pendant light", "W": "wall sconce", "F": "floor lamp", "T": "table lamp", "C": "ceiling light"}[kind]
+    m = re.search(r"The [a-z ]+ is about [^;]*;[^.]*\.", base)
+    size = (m.group(0) + " ") if m else ""
+    big = (f"The room is spacious with a 2.8 m ceiling; the {lamp} must not look oversized — clearly smaller than the furniture beneath it, "
+           f"with plenty of empty ceiling around it. ") if kind in "LPC" else ""
+    return (f"Use the attached product photo as the exact reference for the {lamp}. Scene: {pick(key)}. {size}{big}{LIGHT}"
+            f"Photorealistic interior photography, {'28mm' if kind in 'LPC' else '35mm'} lens, natural composition, lived-in and styled, "
+            f"no people, no text, no logos, no watermarks, no other decorative lamps except those described. "
+            f"Keep the {lamp}'s design exactly as in the reference: same shape, proportions, number of arms and shades, materials, glass and metal color, "
+            f"and type of suspension.")
 
 
 def gen_local(code, model):
     import base64, urllib.parse
     p = req("prompt", code=code)
     if "error" in p: return p
-    p["prompt"] += " " + variation(code)
+    p["prompt"] = build_prompt(code, p["prompt"])
     raw = urllib.request.urlopen(urllib.request.Request(p["photo"], headers={"user-agent": "Mozilla/5.0 SvitloPlaza"}), timeout=60).read()
     ref = Image.open(io.BytesIO(raw)).convert("RGB"); ref.thumbnail((1600, 1600), Image.LANCZOS)
     rb = io.BytesIO(); ref.save(rb, "JPEG", quality=90)
