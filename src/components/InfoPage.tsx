@@ -4,6 +4,7 @@ import { getSetting } from "@/lib/catalog";
 
 // Сторінки «Покупцям» (оплата, доставка, повернення, конфіденційність). Посилання — у футері.
 export const INFO = [
+  { href: "/pro-nas", label: "Про нас" },
   { href: "/oplata", label: "Способи оплати" },
   { href: "/dostavka", label: "Доставка" },
   { href: "/povernennia", label: "Повернення товару та коштів" },
@@ -11,6 +12,10 @@ export const INFO = [
 ];
 
 export const CONTACT_EMAIL = "svitloplaza@gmail.com";
+/** Продавець (рішення власника 08.11 — вказувати на сайті для Google Merchant Center). */
+export const SELLER = "ФОП Савченко Вадим Іванович";
+export const PHONE = "+38 (098) 383-48-22";
+export const ADDRESS = "м. Черкаси, вул. Кривалівська, 38";
 export type Showroom = { address: string | null; hours: string | null; phone: string | null };
 export const getShowroom = () => getSetting<Showroom>("showroom");
 
@@ -19,6 +24,7 @@ export function Contacts({ s }: { s: Showroom | null }) {
     <ul>
       {s?.phone && <li>Телефон: <a href={`tel:${s.phone.replace(/[^+\d]/g, "")}`}>{s.phone}</a></li>}
       <li>Email: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></li>
+      <li>Продавець: {SELLER}</li>
       {s?.address && <li>Шоурум: {s.address}{s.hours ? `, ${s.hours}` : ""}</li>}
     </ul>
   );

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import InfoPage, { CONTACT_EMAIL, Contacts, getShowroom } from "@/components/InfoPage";
+import InfoPage, { CONTACT_EMAIL, Contacts, getShowroom, SELLER, ADDRESS } from "@/components/InfoPage";
 
 export const revalidate = 3600;
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export default async function Page() {
     <InfoPage href="/konfidentsiinist" title={["Політика", "конфіденційності"]} updated="22.10.2026"
       lead="Ми збираємо лише ті дані, без яких неможливо виконати ваше замовлення, і обробляємо їх відповідно до Закону України «Про захист персональних даних».">
       <h2>Хто обробляє дані</h2>
-      <p>Власник даних — Svitlo Plaza, інтернет-магазин svitloplaza.store. З усіх питань щодо персональних даних пишіть на <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</p>
+      <p>Власник (володілець) даних — {SELLER}, інтернет-магазин Svitlo Plaza (svitloplaza.store), {ADDRESS}. З усіх питань щодо персональних даних пишіть на <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</p>
 
       <h2>Які дані ми збираємо</h2>
       <ul>

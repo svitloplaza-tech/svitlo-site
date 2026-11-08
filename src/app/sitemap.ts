@@ -44,7 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     page("/katalog", 0.9, "daily"),
     ...kinds.filter((k) => k.count > 0).map((k) => page(`/katalog/${k.slug}`, 0.9, "daily")),
     page("/katalog/kolektsii", 0.8),
-    page("/shourum", 0.6, "monthly"), page("/3d-tur", 0.4, "monthly"), page("/sotsmerezhi", 0.4, "monthly"),
+    page("/pro-nas", 0.6, "monthly"), page("/shourum", 0.6, "monthly"), page("/3d-tur", 0.4, "monthly"), page("/sotsmerezhi", 0.4, "monthly"),
     page("/oplata", 0.4, "yearly"), page("/dostavka", 0.4, "yearly"), page("/povernennia", 0.4, "yearly"), page("/konfidentsiinist", 0.2, "yearly"),
     ...series.map((id) => page(`/seriya/${id.toLowerCase()}`, 0.7)),
     ...models.map((m) => {
