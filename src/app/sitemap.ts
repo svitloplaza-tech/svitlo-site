@@ -24,13 +24,17 @@ async function ownPhotos() {
 }
 
 async function allModels() {
-  const out: { slug: string; series_id: string; photo: string | null }[] = [];
+  const out: { slug: string; series_id: string; photo: string | null; photos_ai?: string[] | null }[] = [];
   for (let from = 0; ; from += 1000) {
     const { data, error } = await db.from("catalog_models").select("slug,series_id,photo").order("code").range(from, from + 999);
     if (error) throw error;
     out.push(...((data ?? []) as { slug: string; series_id: string; photo: string | null }[]));
     if (!data || data.length < 1000) break;
   }
+  // ШІ-інтер'єри (models.photos_ai) — у карту зображень
+  const { data: ai } = await db.from("models").select("slug,photos_ai").eq("is_active", true).neq("photos_ai", "{}").limit(5000);
+  const A = new Map(((ai ?? []) as { slug: string; photos_ai: string[] }[]).map((r) => [r.slug, r.photos_ai]));
+  for (const m of out) m.photos_ai = A.get(m.slug) ?? null;
   return out;
 }
 
@@ -49,6 +53,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...series.map((id) => page(`/seriya/${id.toLowerCase()}`, 0.7)),
     ...models.map((m) => {
       const own = [...(photos.get(m.slug) ?? [])];
+      for (const u of (m.photos_ai ?? []).filter(ownImg).reverse()) own.unshift(absImg(u)!);
       if (ownImg(m.photo)) own.unshift(absImg(m.photo)!);
       const images = [...new Set(own)].slice(0, 10);
       return { ...page(`/p/${m.slug}`, 0.8), ...(images.length ? { images } : {}) };

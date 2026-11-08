@@ -16,7 +16,7 @@ export type Variant = {
 };
 export type Model = {
   code: string; slug: string; series_id: string; kind_code: string; kind_name: string; title: string; description: string | null;
-  photo: string | null; photo_interior: string | null; own: boolean;
+  photo: string | null; photo_interior: string | null; photos_ai?: string[] | null; own: boolean;
 };
 
 export const REVALIDATE = 3600;

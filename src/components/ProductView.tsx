@@ -10,8 +10,8 @@ export default function ProductView({ model, variants }: { model: Model; variant
   const colors = useMemo(() => [...new Set(variants.map((v) => v.color).filter(Boolean) as string[])], [variants]);
   const [cur, setCur] = useState<Variant>(variants.find((v) => v.in_stock) ?? variants[0]);
   const imgs = useMemo(() => {
-    // головні фото варіантів → фото моделі → решта фото варіантів (variants.photos: ракурси, креслення, інтер'єри) → інтер'єр моделі
-    return [...new Set([...variants.map((v) => v.photo), model.photo, ...variants.flatMap((v) => v.photos ?? []), model.photo_interior]
+    // головні фото варіантів → фото моделі → ШІ-інтер'єри (models.photos_ai) → решта фото варіантів (ракурси, креслення, інтер'єри) → інтер'єр моделі
+    return [...new Set([...variants.map((v) => v.photo), model.photo, ...(model.photos_ai ?? []), ...variants.flatMap((v) => v.photos ?? []), model.photo_interior]
       .map(img).filter(Boolean) as string[])];
   }, [variants, model]);
   const [shown, setShown] = useState<string | null>(img(cur?.photo ?? model.photo));

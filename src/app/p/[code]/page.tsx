@@ -32,7 +32,7 @@ export default async function ProductPage({ params }: Props) {
   const t = texts(d);
   const prices = d.variants.map((v) => v.price).filter((p): p is number => !!p);
   const ld = { "@context": "https://schema.org", "@type": "Product", name: d.model.title, sku: d.model.code, description: t.desc,
-    image: [...new Set([d.model.photo, ...d.variants.map((v) => v.photo), d.model.photo_interior].map(absImg).filter(Boolean))].slice(0, 6), brand: { "@type": "Brand", name: "Svitlo Plaza" },
+    image: [...new Set([d.model.photo, ...d.variants.map((v) => v.photo), ...(d.model.photos_ai ?? []), d.model.photo_interior].map(absImg).filter(Boolean))].slice(0, 6), brand: { "@type": "Brand", name: "Svitlo Plaza" },
     offers: prices.length ? { "@type": "AggregateOffer", priceCurrency: "UAH", lowPrice: Math.min(...prices), highPrice: Math.max(...prices),
       offerCount: d.variants.length, availability: d.variants.some((v) => v.in_stock) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       url: `https://www.svitloplaza.store/p/${d.model.slug}` } : undefined };

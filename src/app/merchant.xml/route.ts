@@ -49,11 +49,12 @@ export async function GET() {
     let desc = "";
     try { desc = describeModel(m as unknown as DModel, (V.get(m.code as string) ?? []) as unknown as DVariant[], (S.get(m.series_id as string) ?? null) as unknown as DSeries).body.join(" "); } catch { /* опис не обов'язковий */ }
     if (!desc) desc = String(m.description ?? m.title);
+    const ai = ((m.photos_ai as string[]) ?? []).map(full); // власні ШІ-інтер'єри — першими серед додаткових
     const extra = [full(m.photo_interior as string), full(m.photo as string)];
     for (const v of vs) {
       const main = full(v.photo as string) ?? full(m.photo as string) ?? (cardPhoto(m.photo as string) ? absImg(m.photo as string) : null);
       if (!main) continue;
-      const add = [...new Set([...((v.photos as string[]) ?? []).map(full), ...extra].filter((u): u is string => !!u && u !== main))].slice(0, 5);
+      const add = [...new Set([...ai, ...((v.photos as string[]) ?? []).map(full), ...extra].filter((u): u is string => !!u && u !== main))].slice(0, 5);
       const parts = [v.size, v.color].filter(Boolean).join(", ");
       const title = cut(`${m.title} ${m.code}${parts ? `, ${parts}` : ""}`, 150);
       const price = v.price as number, old = v.old_price as number | null;
