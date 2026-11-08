@@ -17,6 +17,21 @@ export const SELLER = "ФОП Савченко Вадим Іванович";
 export const SELLER_ID = "2404208952"; // РНОКПП (витяг ЄДР 27.10.2026)
 export const PHONE = "+38 (098) 383-48-22";
 export const ADDRESS = "м. Черкаси, вул. Кривалівська, 38";
+/** Профіль компанії в Google Maps («Світло Плаза (SvitloPlaza ex. Світло Стиль)»). */
+export const MAPS_URL = "https://maps.google.com/?cid=321594649625484227";
+export const GEO = { lat: 49.4290939, lng: 32.0783016 };
+export const MAPS_DIR = `https://www.google.com/maps/dir/?api=1&destination=${GEO.lat},${GEO.lng}`;
+/** Розмітка компанії для Google (LocalBusiness). */
+export const STORE_LD = {
+  "@context": "https://schema.org", "@type": "Store", "@id": "https://www.svitloplaza.store/#store",
+  name: "Svitlo Plaza", alternateName: "Світло Плаза", url: "https://www.svitloplaza.store",
+  logo: "https://www.svitloplaza.store/brand/logo-h-lamp.svg", telephone: "+380983834822", email: "svitloplaza@gmail.com",
+  address: { "@type": "PostalAddress", streetAddress: "вул. Кривалівська, 38", addressLocality: "Черкаси", addressRegion: "Черкаська область", postalCode: "18000", addressCountry: "UA" },
+  geo: { "@type": "GeoCoordinates", latitude: GEO.lat, longitude: GEO.lng },
+  openingHoursSpecification: [{ "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], opens: "09:00", closes: "17:00" }],
+  hasMap: "https://maps.google.com/?cid=321594649625484227", sameAs: ["https://maps.google.com/?cid=321594649625484227"],
+  legalName: "ФОП Савченко Вадим Іванович", taxID: "2404208952", priceRange: "₴₴",
+};
 export type Showroom = { address: string | null; hours: string | null; phone: string | null };
 export const getShowroom = () => getSetting<Showroom>("showroom");
 
