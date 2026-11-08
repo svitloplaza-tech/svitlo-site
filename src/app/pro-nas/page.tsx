@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import InfoPage, { Contacts, getShowroom, SELLER, SELLER_ID } from "@/components/InfoPage";
+import InfoPage, { Contacts, getShowroom, MAPS_URL, SELLER, SELLER_ID, STORE_LD } from "@/components/InfoPage";
 
 export const revalidate = 3600;
 export const metadata: Metadata = {
@@ -19,7 +19,7 @@ export default async function Page() {
 
       <h2>Шоурум</h2>
       <p>Частину світильників можна побачити наживо: увімкнути, порівняти кольорову температуру й розміри. Приходьте — допоможемо з вибором і розрахунком кількості світла для приміщення.</p>
-      <p><Link href="/shourum">Адреса й 3D-тур шоуруму →</Link></p>
+      <p><Link href="/shourum">Адреса, мапа й 3D-тур шоуруму →</Link> · <a href={MAPS_URL} target="_blank" rel="noopener">Відгуки покупців у Google →</a></p>
 
       <h2>Як ми працюємо</h2>
       <ul>
@@ -31,6 +31,7 @@ export default async function Page() {
       <h2>Продавець і контакти</h2>
       <p>Інтернет-магазин svitloplaza.store належить {SELLER} (РНОКПП {SELLER_ID}, зареєстрований у ЄДР 01.04.1997; вид діяльності 47.59 — роздрібна торгівля освітлювальним приладдям і товарами для дому).</p>
       <Contacts s={s} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(STORE_LD).replace(/</g, "\\u003c") }} />
     </InfoPage>
   );
 }
