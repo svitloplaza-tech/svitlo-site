@@ -35,10 +35,59 @@ def opt(a, name, default=None):
     return a[a.index(name) + 1] if name in a else default
 
 
+GKEY = True  # генеруємо тут: референс стискаємо, Gemini — через ai-gen?action=proxy (ключ лишається в Supabase)
+
+
+import random
+STYLES = ["Scandinavian", "warm minimalist", "Japandi", "modern classic with wall moldings", "contemporary with natural stone accents",
+          "soft modern with a curved sofa", "mid-century modern", "quiet luxury with travertine and walnut"]
+PLANTS = ["an olive tree in a terracotta pot", "a tall monstera", "a bird of paradise plant", "dried pampas grass in a floor vase",
+          "a small potted palm", "branches of eucalyptus in a glass vase", "a snake plant in a concrete planter"]
+WALLS = ["warm white", "greige", "soft sand", "light taupe", "pale sage green", "limewash beige"]
+
+
+def variation(code):
+    r = random.Random(f"{code}-{random.random()}")  # різні кадри для різних моделей і спроб
+    return (f"Interior style: {r.choice(STYLES)}, {r.choice(WALLS)} walls; use {r.choice(PLANTS)} instead of a fiddle-leaf fig. "
+            "Scale check: the lamp must look clearly smaller than the sofa or the table beneath it, with plenty of empty ceiling around it.")
+
+
+def gen_local(code, model):
+    import base64, urllib.parse
+    p = req("prompt", code=code)
+    if "error" in p: return p
+    p["prompt"] += " " + variation(code)
+    raw = urllib.request.urlopen(urllib.request.Request(p["photo"], headers={"user-agent": "Mozilla/5.0 SvitloPlaza"}), timeout=60).read()
+    ref = Image.open(io.BytesIO(raw)).convert("RGB"); ref.thumbnail((1600, 1600), Image.LANCZOS)
+    rb = io.BytesIO(); ref.save(rb, "JPEG", quality=90)
+    body = {"contents": [{"role": "user", "parts": [{"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(rb.getvalue()).decode()}}, {"text": p["prompt"]}]}],
+            "generationConfig": {"responseModalities": ["IMAGE"], "imageConfig": {"aspectRatio": "4:5", "imageSize": "2K"}}}
+    r = urllib.request.Request(f"{GEN}?action=proxy&model={model}", data=json.dumps(body).encode(),
+                               headers={"x-ai-secret": SECRET, "content-type": "application/json"}, method="POST")
+    try:
+        d = json.load(urllib.request.urlopen(r, timeout=300))
+    except urllib.error.HTTPError as e:
+        return {"error": f"gemini {e.code} {e.read()[:200].decode(errors='ignore')}"}
+    parts = (d.get("candidates") or [{}])[0].get("content", {}).get("parts", [])
+    img = next((x["inlineData"]["data"] for x in parts if "inlineData" in x), None)
+    if not img: return {"error": f"no image {(d.get('candidates') or [{}])[0].get('finishReason')} {d.get('promptFeedback')}"}
+    out = Image.open(io.BytesIO(base64.b64decode(img))).convert("RGB")
+    ob = io.BytesIO(); out.save(ob, "WEBP", quality=84, method=6)
+    up = urllib.request.Request(f"{GEN}?action=add&code={code}&model={model}", data=ob.getvalue(), method="PUT",
+                                headers={"x-ai-secret": SECRET, "content-type": "image/webp", "x-prompt": urllib.parse.quote(p["prompt"])})
+    try:
+        return json.load(urllib.request.urlopen(up, timeout=120))
+    except urllib.error.HTTPError as e:
+        return {"error": f"add {e.code} {e.read()[:200].decode(errors='ignore')}"}
+
+
 def gen(codes, model, par):
     ok = bad = 0
     def one(c):
-        return c, req("gen", "POST", code=c, model=model)
+        try:
+            return c, (gen_local(c, model) if GKEY else req("gen", "POST", code=c, model=model))
+        except Exception as e:  # мережа тощо
+            return c, {"error": repr(e)[:200]}
     with ThreadPoolExecutor(par) as ex:
         for c, r in ex.map(one, codes):
             if "error" in r: bad += 1; print(f"✗ {c}: {r['error']}")
@@ -63,7 +112,7 @@ def publish():
 
 
 def main(a):
-    model, par = opt(a, "--model", "gemini-3-pro-image-preview"), int(opt(a, "--par", "4"))
+    model, par = opt(a, "--model", "gemini-3.1-flash-image"), int(opt(a, "--par", "4"))
     if a[0] == "queue":
         for r in req("queue", limit=a[1] if len(a) > 1 else 20, kinds=a[2] if len(a) > 2 and not a[2].startswith("--") else None):
             print(r["code"], r["kind_code"], r["price"])
