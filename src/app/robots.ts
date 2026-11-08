@@ -6,7 +6,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   const host = (await headers()).get("host") ?? "";
   if (!host.endsWith("svitloplaza.store")) return { rules: { userAgent: "*", disallow: "/" } };
   return {
-    rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/koshyk", "/zamovlennia", "/obrane", "/poshuk"] },
+    rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/ai-pereglyad", "/koshyk", "/zamovlennia", "/obrane", "/poshuk"] },
     sitemap: "https://www.svitloplaza.store/sitemap.xml",
     host: "https://www.svitloplaza.store",
   };
