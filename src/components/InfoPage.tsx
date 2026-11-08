@@ -14,6 +14,7 @@ export const INFO = [
 export const CONTACT_EMAIL = "svitloplaza@gmail.com";
 /** Продавець (рішення власника 08.11 — вказувати на сайті для Google Merchant Center). */
 export const SELLER = "ФОП Савченко Вадим Іванович";
+export const SELLER_ID = "2404208952"; // РНОКПП (витяг ЄДР 27.10.2026)
 export const PHONE = "+38 (098) 383-48-22";
 export const ADDRESS = "м. Черкаси, вул. Кривалівська, 38";
 export type Showroom = { address: string | null; hours: string | null; phone: string | null };
@@ -24,7 +25,7 @@ export function Contacts({ s }: { s: Showroom | null }) {
     <ul>
       {s?.phone && <li>Телефон: <a href={`tel:${s.phone.replace(/[^+\d]/g, "")}`}>{s.phone}</a></li>}
       <li>Email: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></li>
-      <li>Продавець: {SELLER}</li>
+      <li>Продавець: {SELLER}, РНОКПП {SELLER_ID}</li>
       {s?.address && <li>Шоурум: {s.address}{s.hours ? `, ${s.hours}` : ""}</li>}
     </ul>
   );
