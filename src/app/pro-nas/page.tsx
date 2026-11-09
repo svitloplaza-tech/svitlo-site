@@ -30,6 +30,7 @@ export default async function Page() {
 
       <h2>Продавець і контакти</h2>
       <p>Інтернет-магазин svitloplaza.store належить {SELLER} (РНОКПП {SELLER_ID}, зареєстрований у ЄДР 01.04.1997; вид діяльності 47.59 — роздрібна торгівля освітлювальним приладдям і товарами для дому).</p>
+      <p>Магазином і шоурумом керує Станіслав Савченко.</p>
       <Contacts s={s} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(STORE_LD).replace(/</g, "\\u003c") }} />
     </InfoPage>
