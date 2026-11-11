@@ -35,6 +35,7 @@ def opt(a, name, default=None):
     return a[a.index(name) + 1] if name in a else default
 
 
+SIZE = "2K"  # --size 1K дешевше (тест 11.11)
 GKEY = True  # генеруємо тут: референс стискаємо, Gemini — через ai-gen?action=proxy (ключ лишається в Supabase)
 
 
@@ -129,7 +130,7 @@ def gen_local(code, model):
     ref = Image.open(io.BytesIO(raw)).convert("RGB"); ref.thumbnail((1600, 1600), Image.LANCZOS)
     rb = io.BytesIO(); ref.save(rb, "JPEG", quality=90)
     body = {"contents": [{"role": "user", "parts": [{"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(rb.getvalue()).decode()}}, {"text": p["prompt"]}]}],
-            "generationConfig": {"responseModalities": ["IMAGE"], "imageConfig": {"aspectRatio": "4:5", "imageSize": "2K"}}}
+            "generationConfig": {"responseModalities": ["IMAGE"], "imageConfig": {"aspectRatio": "4:5", "imageSize": SIZE}}}
     r = urllib.request.Request(f"{GEN}?action=proxy&model={model}", data=json.dumps(body).encode(),
                                headers={"x-ai-secret": SECRET, "content-type": "application/json"}, method="POST")
     try:
@@ -180,7 +181,9 @@ def publish():
 
 
 def main(a):
+    global SIZE
     model, par = opt(a, "--model", "gemini-3.1-flash-image"), int(opt(a, "--par", "4"))
+    SIZE = opt(a, "--size", SIZE)
     if a[0] == "queue":
         for r in req("queue", limit=a[1] if len(a) > 1 else 20, kinds=a[2] if len(a) > 2 and not a[2].startswith("--") else None):
             print(r["code"], r["kind_code"], r["price"])
