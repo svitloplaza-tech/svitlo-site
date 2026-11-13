@@ -488,3 +488,13 @@ html.menu-open,html.menu-open body{overflow:hidden}
 /* юридичний рядок футера (продавець, контакти) */
 footer.site .legal{margin-top:28px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08);font-size:13px;line-height:1.6;opacity:.6;display:block}
 footer.site .legal a{color:inherit}
+
+/* Банер згоди на cookies (src/components/Analytics.tsx) */
+.consent{position:fixed;z-index:60;left:16px;right:16px;bottom:16px;max-width:560px;margin-inline:auto;display:flex;align-items:center;gap:16px;padding:14px 16px;background:var(--sp-card);border:1px solid rgba(255,255,255,.1);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.5);color:var(--sp-mute);font-size:13px;line-height:1.45}
+.consent p{margin:0;flex:1}
+.consent a{color:var(--sp-white)}
+.consent-btns{display:flex;gap:8px;flex-shrink:0}
+.consent button{white-space:nowrap;font:500 13px/1 var(--f-text);padding:10px 14px;border-radius:999px;cursor:pointer;border:1px solid rgba(255,255,255,.18);background:transparent;color:var(--sp-white)}
+.consent .consent-yes{background:var(--sp-white);color:var(--sp-black);border-color:var(--sp-white)}
+@media(max-width:520px){.consent{flex-direction:column;align-items:stretch}.consent-btns>button{flex:1}}
+.consent-link{all:unset;cursor:pointer;display:block;padding-block:3px;white-space:nowrap}.consent-link:hover{color:var(--sp-white)}
