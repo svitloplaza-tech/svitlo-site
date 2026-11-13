@@ -4,6 +4,8 @@ import { Inter_Tight, Doto } from "next/font/google";
 import localFont from "next/font/local";
 import Header from "@/components/Header";
 import Ambient from "@/components/Ambient";
+import Analytics, { ConsentLink } from "@/components/Analytics";
+import { GA_INIT } from "@/lib/analytics";
 import "./globals.css";
 import { LOGO } from "@/lib/brand";
 import { ADDRESS, CONTACT_EMAIL, INFO, PHONE, SELLER, SELLER_ID } from "@/components/InfoPage";
@@ -24,6 +26,7 @@ export const viewport: Viewport = { themeColor: "#000000", viewportFit: "cover" 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="uk" className={`${inter.variable} ${doto.variable} ${pixel.variable}`}>
+      <head><script dangerouslySetInnerHTML={{ __html: GA_INIT }} /></head>
       <body>
         <Ambient />
         <Header />
@@ -33,10 +36,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div><h4>Каталог</h4><Link href="/katalog/lyustry">Люстри</Link><Link href="/katalog/pidvisni">Підвісні</Link><Link href="/katalog/bra">Бра</Link><Link href="/katalog">Усі типи</Link></div>
           <div><h4>Шоурум</h4><Link href="/shourum">Адреса й контакти</Link><Link href="/3d-tur">3D-тур</Link></div>
           <div><h4>Покупцям</h4>{INFO.map((i) => <Link key={i.href} href={i.href}>{i.label}</Link>)}</div>
-          <div><h4>Ми</h4><Link href="/sotsmerezhi">Ми в соцмережах</Link><Link href="/koshyk">Кошик</Link></div>
+          <div><h4>Ми</h4><Link href="/sotsmerezhi">Ми в соцмережах</Link><Link href="/koshyk">Кошик</Link><ConsentLink /></div>
         </div>
         <div className="wrap legal">© {new Date().getFullYear()} Svitlo Plaza · {SELLER}, РНОКПП {SELLER_ID} · {ADDRESS} · <a href={`tel:${PHONE.replace(/[^+\d]/g, "")}`}>{PHONE}</a> · <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></div>
         </footer>
+        <Analytics />
       </body>
     </html>
   );
