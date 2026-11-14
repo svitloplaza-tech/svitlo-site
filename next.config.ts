@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
       // старий WordPress-сайт
       { source: "/product-category/:path*", destination: "/katalog", permanent: true },
       { source: "/shop", destination: "/katalog", permanent: true },
+      // старі сторінки WordPress (є в Google)
+      { source: "/contact", destination: "/shourum", permanent: true },
+      { source: "/contacts", destination: "/shourum", permanent: true },
+      { source: "/about", destination: "/pro-nas", permanent: true },
+      { source: "/about-us", destination: "/pro-nas", permanent: true },
       { source: "/shop/:path*", destination: "/katalog", permanent: true },
     ];
   },
