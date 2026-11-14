@@ -79,7 +79,7 @@ export default function Header() {
             <a href={`tel:${PHONE}`}>{PHONE_TXT}</a>
           </nav>
           <div className="mm-kinds">
-            <h4>Каталог</h4>
+            <h4><Link href="/katalog" onClick={() => setOpen(false)}>Каталог</Link></h4>
             {KINDS.map(([c, name, slug]) => <Link key={c} href={`/katalog/${slug}`} onClick={() => setOpen(false)}><b>{c}</b>{name}</Link>)}
             <Link className="allser" href="/katalog/kolektsii" onClick={() => setOpen(false)}><b>K</b>Колекції</Link>
           </div>

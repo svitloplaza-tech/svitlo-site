@@ -1,5 +1,6 @@
 "use client";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { addToCart } from "@/lib/cart";
 import FavButton from "@/components/FavButton";
 import { fmt, swatch, type Model, type Variant } from "@/lib/catalog";
@@ -26,6 +27,21 @@ export default function ProductView({ model, variants }: { model: Model; variant
   const idx = Math.max(0, imgs.indexOf(shown ?? ""));
   const step = (d: number) => { if (imgs.length > 1) show(imgs[(idx + d + imgs.length) % imgs.length]); };
   const touch = useRef<{ x: number; y: number } | null>(null);
+  // повноекранний перегляд фото (тап по великому фото): гортання стрілками/свайпом, закриття — Esc, ×, тап по фону
+  const [zoom, setZoom] = useState(false);
+  useEffect(() => {
+    if (!zoom) return;
+    document.documentElement.classList.add("menu-open");
+    const k = (e: KeyboardEvent) => { if (e.key === "Escape") setZoom(false); if (e.key === "ArrowLeft") step(-1); if (e.key === "ArrowRight") step(1); };
+    window.addEventListener("keydown", k);
+    return () => { document.documentElement.classList.remove("menu-open"); window.removeEventListener("keydown", k); };
+  });
+  const swipe = { onTouchStart: (e: React.TouchEvent) => { touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; },
+    onTouchEnd: (e: React.TouchEvent) => {
+      const t = touch.current; touch.current = null; if (!t) return;
+      const dx = e.changedTouches[0].clientX - t.x, dy = e.changedTouches[0].clientY - t.y;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) step(dx < 0 ? 1 : -1);
+    } };
   const choose = (size: string | null, color: string | null) => {
     const v = variants.find((x) => x.size === size && x.color === color)
       ?? variants.find((x) => (size != null ? x.size === size : x.color === color)) ?? cur;
@@ -38,13 +54,8 @@ export default function ProductView({ model, variants }: { model: Model; variant
       <div className="gal">
         <div className="ph" id="big" tabIndex={imgs.length > 1 ? 0 : undefined} aria-label={imgs.length > 1 ? "Фото товару, гортайте стрілками" : undefined}
           onKeyDown={(e) => { if (e.key === "ArrowLeft") step(-1); if (e.key === "ArrowRight") step(1); }}
-          onTouchStart={(e) => { touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }}
-          onTouchEnd={(e) => {
-            const t = touch.current; touch.current = null; if (!t) return;
-            const dx = e.changedTouches[0].clientX - t.x, dy = e.changedTouches[0].clientY - t.y;
-            if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) step(dx < 0 ? 1 : -1);
-          }}>
-          {shown && <img src={shown} alt={`${model.title} ${model.code}${idx ? ` — фото ${idx + 1}` : ""}`} className={fade ? "fade" : ""} draggable={false} />}
+          {...swipe}>
+          {shown && <img src={shown} alt={`${model.title} ${model.code}${idx ? ` — фото ${idx + 1}` : ""}`} className={fade ? "fade" : ""} draggable={false} onClick={() => setZoom(true)} style={{ cursor: "zoom-in" }} />}
           {imgs.length > 1 && (<>
             <button type="button" className="nav prev" aria-label="Попереднє фото" onClick={() => step(-1)}>‹</button>
             <button type="button" className="nav next" aria-label="Наступне фото" onClick={() => step(1)}>›</button>
@@ -57,6 +68,17 @@ export default function ProductView({ model, variants }: { model: Model; variant
               <button key={u} type="button" aria-pressed={u === shown} onClick={() => show(u)} aria-label="Показати фото"><img src={u} alt={`${model.title} ${model.code} — фото ${i + 1}`} loading="lazy" /></button>
             ))}
           </div>
+        )}
+        {zoom && shown && createPortal(
+          <div className="lbox" role="dialog" aria-modal="true" aria-label="Перегляд фото" onClick={() => setZoom(false)} {...swipe}>
+            <img src={shown} alt={`${model.title} ${model.code}`} className={fade ? "fade" : ""} onClick={(e) => e.stopPropagation()} draggable={false} />
+            <button type="button" className="lb-x" aria-label="Закрити">×</button>
+            {imgs.length > 1 && (<>
+              <button type="button" className="nav prev" aria-label="Попереднє фото" onClick={(e) => { e.stopPropagation(); step(-1); }}>‹</button>
+              <button type="button" className="nav next" aria-label="Наступне фото" onClick={(e) => { e.stopPropagation(); step(1); }}>›</button>
+              <span className="cnt" aria-hidden="true">{idx + 1} / {imgs.length}</span>
+            </>)}
+          </div>, document.body
         )}
       </div>
       <div className="info">

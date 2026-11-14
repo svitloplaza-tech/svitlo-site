@@ -498,3 +498,15 @@ footer.site .legal a{color:inherit}
 .consent .consent-yes{background:var(--sp-white);color:var(--sp-black);border-color:var(--sp-white)}
 @media(max-width:520px){.consent{flex-direction:column;align-items:stretch}.consent-btns>button{flex:1}}
 .consent-link{all:unset;cursor:pointer;display:block;padding-block:3px;white-space:nowrap}.consent-link:hover{color:var(--sp-white)}
+
+/* Повноекранне фото товару (ProductView) */
+.lbox{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.94);display:flex;align-items:center;justify-content:center;touch-action:pan-y;cursor:zoom-out}
+.lbox img{max-width:min(96vw,1400px);max-height:88vh;object-fit:contain;border-radius:12px;background:var(--sp-paper);cursor:default;transition:opacity .18s}
+.lbox img.fade{opacity:0}
+.lbox .lb-x{position:absolute;top:max(14px,env(safe-area-inset-top));right:14px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;font-size:26px;line-height:1;cursor:pointer}
+.lbox .nav{position:absolute;top:50%;width:48px;height:48px;margin-top:-24px;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:24px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.lbox .nav:hover{background:rgba(255,255,255,.22)}
+.lbox .nav.prev{left:12px}.lbox .nav.next{right:12px}
+.lbox .cnt{position:absolute;bottom:max(16px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);color:var(--sp-mute);font:800 13px/1 var(--f-dot)}
+.loadmore .lm-wait{color:var(--sp-mute);white-space:nowrap}
+.mm-kinds h4 a{color:inherit;text-decoration:none}

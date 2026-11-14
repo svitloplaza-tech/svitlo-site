@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import CatalogFilters from "@/components/CatalogFilters";
+import LoadMore from "@/components/LoadMore";
 import ModelCard from "@/components/ModelCard";
 import { getCatalogByKind, getColorPhotos, getKinds, plural } from "@/lib/catalog";
 import { applyFilters } from "@/lib/filters";
@@ -59,7 +59,7 @@ export default async function KindPage({ params, searchParams }: Props) {
           <Link className="type allser" href="/katalog/kolektsii"><b>K</b><span>Колекції</span></Link>
         </nav>
       </div>
-      <Suspense><CatalogFilters groups={f.groups} ranges={f.ranges} active={f.active} total={list.length} /></Suspense>
+      <CatalogFilters groups={f.groups} ranges={f.ranges} active={f.active} total={list.length} stock={sp.nayavnist === "1"} sort={sp.sort ?? "pop"} />
       <div className="wrap">
         <div className="count">{list.length ? `Знайдено: ${list.length} ${plural(list.length, ["модель", "моделі", "моделей"])}` : ""}</div>
         <div className="grid">
@@ -68,7 +68,7 @@ export default async function KindPage({ params, searchParams }: Props) {
         </div>
         {left > 0 && (
           <div className="loadmore">
-            <Link href={href(page, n + 1)} scroll={false} rel="nofollow">Показати ще <b>{Math.min(PER, left)}</b></Link>
+            <LoadMore href={href(page, n + 1)} count={Math.min(PER, left)} />
           </div>
         )}
         {pages > 1 && (
