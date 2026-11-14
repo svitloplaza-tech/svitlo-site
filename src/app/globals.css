@@ -55,7 +55,15 @@ header .wrap>*{flex-shrink:0}
   .search:hover,.search:focus-within,.search:has(input:not(:placeholder-shown)){margin-left:-168px}
 }
 @media(min-width:861px) and (max-width:1000px){header .wrap{gap:16px}nav.main{gap:16px}.cart span{display:none}}
-@media(max-width:860px){nav.main{display:none}.search{flex:1 1 0}}
+@media(max-width:860px){nav.main{display:none}
+  /* мобільний: лупа 42px; тап — поле розгортається поверх усієї шапки (раніше стискалось до ширини іконки і текст було не видно) */
+  header .wrap{position:relative}
+  header .wrap>.search{flex:0 0 42px;width:42px;padding:9px 13px;overflow:hidden}
+  .search input{opacity:0;font-size:16px}
+  header .wrap>.search:focus-within{position:absolute;left:var(--gl);right:var(--gr);top:50%;transform:translateY(-50%);width:auto;z-index:5;padding:11px 16px;background:var(--sp-graphite);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--sp-warm) 45%,transparent),0 0 0 100vmax rgba(0,0,0,.55)}
+  .search:focus-within input{opacity:1}
+  .search:focus-within label{color:var(--sp-warm)}
+}
 @media(max-width:520px){header .wrap{gap:12px}.cart span{display:none}}
 
 .crumbs{display:flex;gap:8px;font-size:13px;color:var(--sp-mute);padding-block:28px 12px;flex-wrap:wrap}
