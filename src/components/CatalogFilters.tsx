@@ -1,21 +1,20 @@
 "use client";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import type { GroupView, RangeView } from "@/lib/filters";
 
 /** Панель фільтрів каталогу: рядок (кнопка «Фільтри», вибрані значення, наявність, сортування) + бокова панель з усіма групами. */
-export default function CatalogFilters({ groups, ranges, active, total }: { groups: GroupView[]; ranges: RangeView[]; active: number; total: number }) {
-  const router = useRouter(), path = usePathname(), sp = useSearchParams();
+// stock/sort приходять із сервера (а не useSearchParams), щоб панель рендерилась одразу в HTML і сітка не «стрибала» після завантаження (CLS).
+export default function CatalogFilters({ groups, ranges, active, total, stock, sort }: { groups: GroupView[]; ranges: RangeView[]; active: number; total: number; stock: boolean; sort: string }) {
+  const router = useRouter(), path = usePathname();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const [pending, start] = useTransition();
-  const stock = sp.get("nayavnist") === "1";
-  const sort = sp.get("sort") ?? "pop";
 
   const go = (mut: (p: URLSearchParams) => void) => {
-    const p = new URLSearchParams(sp.toString()); mut(p); p.delete("page"); p.delete("n");
+    const p = new URLSearchParams(window.location.search); mut(p); p.delete("page"); p.delete("n");
     start(() => router.push(`${path}${p.toString() ? `?${p}` : ""}`, { scroll: false }));
   };
   const toggle = (g: string, v: string) => go((p) => {
