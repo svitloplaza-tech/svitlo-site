@@ -1,6 +1,7 @@
 // Ідентифікатори аналітики (публічні, не секрети). Акаунт Google: svitloplaza@gmail.com.
 export const GA_ID = "G-V2RW855TKW"; // Google Analytics 4, ресурс «svitloplaza.store»
 export const CLARITY_ID = "zcyato5sm8"; // Microsoft Clarity, проєкт «Svitlo Plaza»
+export const CF_BEACON = "17d6a6f232ec415f9b25a66b28944e59"; // Cloudflare Web Analytics — без cookies, рахує всіх (не залежить від банера)
 export const CONSENT_KEY = "sp-consent-v1";
 
 // Вставляється в <head> (layout.tsx) до gtag.js: згода за замовчуванням — denied, якщо відвідувач ще не прийняв.
