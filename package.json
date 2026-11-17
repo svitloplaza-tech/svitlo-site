@@ -14,7 +14,7 @@
     "@opennextjs/cloudflare": "^1.20.12",
     "@supabase/supabase-js": "2.45.4",
     "lenis": "1.1.13",
-    "next": "^16.4.2",
+    "next": "^16.4.6",
     "react": "19.1.10",
     "react-dom": "19.1.10",
     "three": "^0.169.0"
