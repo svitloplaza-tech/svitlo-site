@@ -5,6 +5,8 @@
   "compatibility_date": "2025-03-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  // журнали Workers (Cloudflare → svitlo-site → Observability): помилки, статуси, винятки
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "svitlo-site" }],
   // кеш OpenNext (сторінки ISR + unstable_cache); id з'явиться після першого деплою (автостворення)
   "kv_namespaces": [{ "binding": "NEXT_INC_CACHE_KV" }],
