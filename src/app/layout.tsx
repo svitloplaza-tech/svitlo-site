@@ -5,8 +5,7 @@ import localFont from "next/font/local";
 import Header from "@/components/Header";
 import Ambient from "@/components/Ambient";
 import Analytics, { ConsentLink } from "@/components/Analytics";
-import { GA_INIT, CF_BEACON } from "@/lib/analytics";
-import Script from "next/script";
+import { GA_INIT } from "@/lib/analytics";
 import "./globals.css";
 import { LOGO } from "@/lib/brand";
 import { ADDRESS, CONTACT_EMAIL, INFO, PHONE, SELLER, SELLER_ID } from "@/components/InfoPage";
@@ -42,7 +41,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="wrap legal">© {new Date().getFullYear()} Svitlo Plaza · {SELLER}, РНОКПП {SELLER_ID} · {ADDRESS} · <a href={`tel:${PHONE.replace(/[^+\d]/g, "")}`}>{PHONE}</a> · <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></div>
         </footer>
         <Analytics />
-        <Script src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={JSON.stringify({ token: CF_BEACON })} strategy="afterInteractive" />
       </body>
     </html>
   );
