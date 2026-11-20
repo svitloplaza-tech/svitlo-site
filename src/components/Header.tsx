@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { savePhotoQuery, toSmallJpeg } from "@/lib/photoSearch";
 import { cartCount, readCart } from "@/lib/cart";
 import { readFav } from "@/lib/fav";
 import { LOGO } from "@/lib/brand";
@@ -29,6 +30,7 @@ export default function Header() {
   const [n, setN] = useState(0);
   const [fv, setFv] = useState(0);
   const [q, setQ] = useState("");
+  const photo = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   // закриваємо меню при переході на іншу сторінку; блокуємо прокрутку під відкритим меню
   useEffect(() => { setOpen(false); }, [path]);
@@ -57,6 +59,15 @@ export default function Header() {
         <form className="search" role="search" onSubmit={(e) => { e.preventDefault(); if (q.trim()) router.push(`/poshuk?q=${encodeURIComponent(q.trim())}`); }}>
           <label htmlFor="q" aria-hidden="true">⌕</label>
           <input id="q" type="search" placeholder="Назва або код" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Пошук у каталозі" />
+          <button type="button" className="camq" aria-label="Пошук за фото" title="Пошук за фото" onClick={() => photo.current?.click()}>
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2.2l1.5-2h5.6l1.5 2h2.2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" /><circle cx="12" cy="13" r="3.4" fill="none" stroke="currentColor" strokeWidth="1.6" /></svg>
+          </button>
+          <input ref={photo} type="file" accept="image/*" hidden onChange={async (e) => {
+            const f = e.target.files?.[0]; e.target.value = "";
+            if (!f) return;
+            try { savePhotoQuery(await toSmallJpeg(f)); } catch { /* сторінка покаже вибір фото */ }
+            router.push("/poshuk/foto"); window.dispatchEvent(new Event("sp-photo-q"));
+          }} />
         </form>
         <a className="hphone" href={`tel:${PHONE}`} aria-label={`Зателефонувати ${PHONE_TXT}`}><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6.6 3.5h2.6l1.3 4.1-2 1.4a12 12 0 0 0 6.5 6.5l1.4-2 4.1 1.3v2.6a2 2 0 0 1-2.2 2A16.6 16.6 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" /></svg><span>{PHONE_TXT}</span></a>
         <Link className="favlink" href="/obrane" aria-label={`Обране${fv ? `: ${fv}` : ""}`}>

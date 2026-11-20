@@ -16,6 +16,7 @@ export default async function SearchPage({ searchParams }: Props) {
         <h1>Пошук <span className="mute">«{q}»</span></h1>
         <p>{res.length ? `Знайдено: ${res.length} ${plural(res.length, ["модель", "моделі", "моделей"])}${res.length === 60 ? " (перші 60)" : ""}` : "Нічого не знайдено. Спробуйте код моделі, наприклад SP-P1228, або назву серії."}</p>
       </div>
+      <p><Link href="/poshuk/foto" className="btn btn-sec">📷 Пошук за фото</Link></p>
       <div className="grid">{res.map((m, i) => <ModelCard key={m.code} m={m} i={i} />)}</div>
     </main>
   );

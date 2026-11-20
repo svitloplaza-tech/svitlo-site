@@ -24,6 +24,11 @@ Next.js 16 (App Router) + Supabase (проєкт **svitlo-site**, eu-central-1).
 - **Ціни / наявність:** таблиця `variants` (`price`, `in_stock`, `availability`). Сховати модель: `models.is_active = false`.
 - **Повний переімпорт каталогу:** `scripts/import_catalog.py` (див. коментар у файлі).
 
+- **Пошук за фото** (`/poshuk/foto`, кнопка-камера в пошуку шапки): Edge-функція `photo-search` (публічна, ліміт 20 пошуків/10 хв з IP) шукає за «відбитками» фото в таблиці `photo_vectors`.
+  Відбитки рахує Cloudflare Workers AI (`@cf/google/embeddinggemma-2`), секрети `int_cf_account_id`, `int_cf_ai_token`.
+  Індексація — Edge-функція `photo-index` через pg_cron (`photo-index`): сама підхоплює нові/змінені фото каталогу. Запустити зараз: `select public.photo_index_dispatch();`
+  Стан: `select count(*), count(emb), count(error) from photo_vectors;`
+
 ## Локальний запуск
 ```
 cp .env.example .env.local   # вписати ключі

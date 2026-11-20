@@ -44,7 +44,7 @@ nav.main a[aria-current]{color:var(--sp-white)}
   .search{flex:0 0 auto;width:42px;padding:9px 13px;overflow:hidden;cursor:pointer;transition:width .45s cubic-bezier(.2,.8,.2,1),box-shadow .3s,background .3s}
   .search:hover,.search:focus-within,.search:has(input:not(:placeholder-shown)){background:var(--sp-graphite)}
   .search input{opacity:0;transition:opacity .25s}
-  .search:hover,.search:focus-within,.search:has(input:not(:placeholder-shown)){width:210px;cursor:text;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--sp-warm) 45%,transparent)}
+  .search:hover,.search:focus-within,.search:has(input:not(:placeholder-shown)){width:240px;cursor:text;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--sp-warm) 45%,transparent)}
   .search:hover input,.search:focus-within input,.search:has(input:not(:placeholder-shown)) input{opacity:1;transition-delay:.12s}
   .search:hover label,.search:focus-within label{color:var(--sp-warm)}
 }
@@ -52,7 +52,7 @@ header .wrap>*{flex-shrink:0}
 /* вужчі ПК: поле не штовхає сусідів, а розкривається вліво поверх меню (займає в рядку лише 42px) */
 @media(min-width:861px) and (max-width:1300px){
   .search{position:relative;z-index:2;transition:width .45s cubic-bezier(.2,.8,.2,1),margin .45s cubic-bezier(.2,.8,.2,1),box-shadow .3s}
-  .search:hover,.search:focus-within,.search:has(input:not(:placeholder-shown)){margin-left:-168px}
+  .search:hover,.search:focus-within,.search:has(input:not(:placeholder-shown)){margin-left:-198px}
 }
 @media(min-width:861px) and (max-width:1000px){header .wrap{gap:16px}nav.main{gap:16px}.cart span{display:none}}
 @media(max-width:860px){nav.main{display:none}
@@ -518,3 +518,14 @@ footer.site .legal a{color:inherit}
 .lbox .cnt{position:absolute;bottom:max(16px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);color:var(--sp-mute);font:800 13px/1 var(--f-dot)}
 .loadmore .lm-wait{color:var(--sp-mute);white-space:nowrap}
 .mm-kinds h4 a{color:inherit;text-decoration:none}
+
+/* пошук за фото */
+.camq{all:unset;cursor:pointer;display:grid;place-items:center;color:var(--sp-mute);flex-shrink:0;line-height:0}
+.camq:hover,.camq:focus-visible{color:var(--sp-warm)}
+@media(min-width:861px){.search .camq{opacity:0;transition:opacity .25s}.search:hover .camq,.search:focus-within .camq,.search:has(input:not(:placeholder-shown)) .camq{opacity:1;transition-delay:.12s}}
+.photo-q{display:flex;align-items:center;gap:24px;flex-wrap:wrap;padding:20px;margin-bottom:32px;border-radius:20px;border:1px dashed var(--line);background:var(--sp-graphite);transition:border-color .2s}
+.photo-q.drag{border-color:var(--sp-warm)}
+.photo-q img{width:120px;height:120px;object-fit:cover;border-radius:14px;background:#fff}
+.photo-q>div{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.photo-q .mute{font-size:14px;white-space:nowrap}
+.photo-err{color:#e07a6a}
