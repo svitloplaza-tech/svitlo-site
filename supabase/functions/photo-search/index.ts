@@ -1,8 +1,10 @@
 // Пошук за фото (публічний): POST {"image": "data:image/jpeg;base64,…", "n": 24}
-// → {"items": [{code, score, url, model: {…рядок catalog_models…}}]}
+// → {"items": [{code, score, url, ai, model: {…рядок catalog_models…}}]}  (ai = Gemini підтвердив схожість)
+// "rerank": false — без Gemini (лише відбитки); "debug": true — додає витрати токенів.
 // Ліміт: 20 пошуків з однієї IP за 10 хв. Викликають сайт (з браузера) і Staff App.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import { embedImages } from "../_shared/embed.ts";
+import { rerank } from "../_shared/rerank.ts";
 
 const E = (k: string) => Deno.env.get(k) ?? "";
 const CORS = { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type, authorization, apikey, x-client-info",
@@ -12,7 +14,7 @@ const out = (b: unknown, status = 200) => Response.json(b, { status, headers: CO
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   if (req.method !== "POST") return out({ error: "POST" }, 405);
-  const body = await req.json().catch(() => null) as { image?: string; n?: number } | null;
+  const body = await req.json().catch(() => null) as { image?: string; n?: number; rerank?: boolean; debug?: boolean } | null;
   const image = body?.image ?? "";
   if (!/^data:image\/(jpeg|png|webp);base64,/.test(image)) return out({ error: "Потрібне фото JPG, PNG або WebP" }, 400);
   if (image.length > 2_500_000) return out({ error: "Фото завелике" }, 413);
@@ -33,7 +35,19 @@ Deno.serve(async (req) => {
   if (error) { console.error(error); return out({ error: "Помилка пошуку" }, 500); }
   const list = (hits ?? []) as { model_code: string; score: number; url: string }[];
   const { data: models } = await db.from("catalog_models").select("*").in("code", list.map((h) => h.model_code));
-  const by = new Map(((models ?? []) as { code: string }[]).map((m) => [m.code, m]));
-  return out({ items: list.filter((h) => by.has(h.model_code))
-    .map((h) => ({ code: h.model_code, score: Math.round(h.score * 1000) / 1000, url: h.url, model: by.get(h.model_code) })) });
+  const by = new Map(((models ?? []) as { code: string; photo: string | null }[]).map((m) => [m.code, m]));
+  let items = list.filter((h) => by.has(h.model_code))
+    .map((h) => ({ code: h.model_code, score: Math.round(h.score * 1000) / 1000, url: h.url, ai: false, model: by.get(h.model_code)! }));
+  let meta: unknown = undefined;
+  if (body?.rerank !== false && s.GEMINI_API_KEY && items.length > 1) {
+    const top = items.slice(0, 24);
+    const rr = await rerank(s.GEMINI_API_KEY, image, top.map((x) => x.model.photo ?? x.url));
+    if (rr.order) {
+      const first = rr.order.map((i) => ({ ...top[i], ai: true }));
+      const used = new Set(rr.order);
+      items = [...first, ...items.filter((_, i) => !(i < top.length && used.has(i)))];
+    } else console.error("rerank", rr.error);
+    meta = { rerank_ms: rr.ms, usage: rr.usage, error: rr.error };
+  }
+  return out({ items: items.slice(0, n), ...(body?.debug ? { meta } : {}) });
 });
