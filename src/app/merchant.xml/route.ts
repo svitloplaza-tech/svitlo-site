@@ -28,7 +28,7 @@ const x = (s: unknown) => String(s ?? "").replace(/[\u0000-\u0008\u000B\u000C\u0
 const cut = (s: string, n: number) => (s.length <= n ? s : s.slice(0, n - 1).replace(/\s+\S*$/, "") + "…");
 // лише власні фото: чужі (linef.com.ua) у фід не йдуть
 const full = (u: string | null | undefined) => (!u || u.includes("linef.com.ua") ? null : absImg(u));
-const ORDER_DAYS = 14; // орієнтовний строк поставки товару «під замовлення»
+const ORDER_DAYS = 45; // строк поставки «під замовлення» 4–45 днів (власник 23.11) — у фід верхня межа, щоб дата не вводила в оману
 // Google: Дім і сад > Освітлення (594); люстри/підвіси — Стельові світильники (2524), бра (6073), лампи настільні/торшери (4636), вуличні (3006)
 const GCAT: Record<string, string> = { L: "2524", P: "2524", C: "2524", W: "6073", T: "4636", F: "4636", O: "3006" };
 
