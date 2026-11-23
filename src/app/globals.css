@@ -537,3 +537,4 @@ a.grating span:first-child{color:var(--sp-warm);font-size:15px;line-height:1}
 a.grating span:last-child{color:var(--sp-mute)}
 a.grating:hover{box-shadow:inset 0 0 0 1px var(--sp-warm)}
 footer.site a.grating{display:inline-flex;padding:8px 14px}
+.leadtime{margin-top:6px;font-size:13px;color:var(--sp-mute);white-space:nowrap}

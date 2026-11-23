@@ -88,6 +88,7 @@ export default function ProductView({ model, variants }: { model: Model; variant
         <div>
           <div className="bigprice">{cur.price != null ? <>{fmt(cur.price)}<small>₴</small></> : <span style={{ font: "400 20px var(--f-text)" }}>Ціна за запитом</span>}</div>
           <div className={`stock${cur.in_stock ? "" : " no"}`} style={{ marginTop: 12 }}><i />{cur.availability ?? (cur.in_stock ? "В наявності" : "Немає в наявності")}</div>
+          {cur.availability === "Доступний для замовлення" && <div className="leadtime">Строк поставки — від 4 до 45 днів</div>}
         </div>
         {sizes.length > 1 && (
           <div className="opt"><h4>Розмір<b>{cur.size}</b></h4><div className="opts">
