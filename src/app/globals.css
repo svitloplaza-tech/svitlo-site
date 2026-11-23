@@ -530,3 +530,10 @@ footer.site .legal a{color:inherit}
 .photo-q>div{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .photo-q .mute{font-size:14px;white-space:nowrap}
 .photo-err{color:#e07a6a}
+
+/* Рейтинг у Google (картка товару, футер) */
+a.grating{display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:8px 14px;border-radius:999px;background:var(--sp-graphite);box-shadow:inset 0 0 0 1px var(--line);color:var(--sp-white);font-size:13px;text-decoration:none;white-space:nowrap;width:fit-content}
+a.grating span:first-child{color:var(--sp-warm);font-size:15px;line-height:1}
+a.grating span:last-child{color:var(--sp-mute)}
+a.grating:hover{box-shadow:inset 0 0 0 1px var(--sp-warm)}
+footer.site a.grating{display:inline-flex;padding:8px 14px}
