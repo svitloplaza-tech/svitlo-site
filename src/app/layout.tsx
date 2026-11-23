@@ -7,7 +7,7 @@ import Ambient from "@/components/Ambient";
 import Analytics, { ConsentLink } from "@/components/Analytics";
 import { GA_INIT } from "@/lib/analytics";
 import "./globals.css";
-import { LOGO } from "@/lib/brand";
+import { LOGO, GOOGLE_RATING, ratingText } from "@/lib/brand";
 import { ADDRESS, CONTACT_EMAIL, INFO, PHONE, SELLER, SELLER_ID } from "@/components/InfoPage";
 
 const inter = Inter_Tight({ subsets: ["latin", "cyrillic"], weight: ["300", "400", "500"], variable: "--font-inter-tight", display: "swap" });
@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Header />
         {children}
         <footer className="site"><div className="wrap">
-          <div><Link className="logo" href="/" aria-label="Svitlo Plaza — на головну"><img src={LOGO} alt="Svitlo Plaza" /></Link><p style={{ maxWidth: "36ch" }}>Світильники для дому й бізнесу. Шоурум, доставка по Україні.</p></div>
+          <div><Link className="logo" href="/" aria-label="Svitlo Plaza — на головну"><img src={LOGO} alt="Svitlo Plaza" /></Link><p style={{ maxWidth: "36ch" }}>Світильники для дому й бізнесу. Шоурум, доставка по Україні.</p><a className="grating" href={GOOGLE_RATING.url} target="_blank" rel="noopener"><span aria-hidden="true">★</span>{ratingText()}<span aria-hidden="true">→</span></a></div>
           <div><h4>Каталог</h4><Link href="/katalog/lyustry">Люстри</Link><Link href="/katalog/pidvisni">Підвісні</Link><Link href="/katalog/bra">Бра</Link><Link href="/katalog">Усі типи</Link></div>
           <div><h4>Шоурум</h4><Link href="/shourum">Адреса й контакти</Link><Link href="/3d-tur">3D-тур</Link></div>
           <div><h4>Покупцям</h4>{INFO.map((i) => <Link key={i.href} href={i.href}>{i.label}</Link>)}</div>

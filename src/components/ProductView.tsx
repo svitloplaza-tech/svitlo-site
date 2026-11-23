@@ -5,6 +5,7 @@ import { addToCart } from "@/lib/cart";
 import FavButton from "@/components/FavButton";
 import { fmt, swatch, type Model, type Variant } from "@/lib/catalog";
 import { img } from "@/lib/img";
+import { GOOGLE_RATING, ratingText } from "@/lib/brand";
 
 export default function ProductView({ model, variants }: { model: Model; variants: Variant[] }) {
   const sizes = useMemo(() => [...new Set(variants.map((v) => v.size).filter(Boolean) as string[])].sort((a, b) => parseFloat(a) - parseFloat(b)), [variants]);
@@ -115,6 +116,7 @@ export default function ProductView({ model, variants }: { model: Model; variant
             variants_count: variants.length, colors: [...new Set(variants.map((v) => v.color).filter(Boolean))] as string[] }} />
         </div>
         <div className="notes"><div><b>Нова Пошта</b>Доставка по Україні</div><div><b>Оплата</b>Онлайн або накладеним платежем</div><div><b>Шоурум</b>Можна побачити наживо</div></div>
+        <a className="grating" href={GOOGLE_RATING.url} target="_blank" rel="noopener"><span aria-hidden="true">★</span>{ratingText()}<span aria-hidden="true">→</span></a>
         <dl className="specs">
           {([["Артикул", cur.sku], ["Код моделі", model.code], ["Розмір", cur.size], ["Колір", cur.color], ["Колірна температура", cur.temp], ["Потужність", spec(cur, "Потужність")], ["Світловий потік", spec(cur, "Світловий потік")], ["Варіантів моделі", String(variants.length)]] as [string, string | null][])
             .filter(([, v]) => v).map(([a, b]) => (<div key={a} style={{ display: "contents" }}><dt>{a}</dt><dd>{b}</dd></div>))}
