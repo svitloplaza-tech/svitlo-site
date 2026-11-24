@@ -93,6 +93,16 @@ LIGHT = ("Time of day: late evening — windows show a deep blue dusk or night s
          "and is the main light source, warm 3000K glow with realistic light falloff and soft shadows; only subtle warm accent lighting elsewhere. ")
 
 
+def top_cropped(raw):
+    """Чи торкається світильник верхнього краю референсу (кріплення обрізане): у верхніх 2% рядків є пікселі, помітно відмінні від фону."""
+    im = Image.open(io.BytesIO(raw)).convert("L"); im.thumbnail((400, 400))
+    w, h = im.size; px = im.load()
+    bg = sorted(px[x, y] for x, y in [(0, h - 1), (w - 1, h - 1), (0, h // 2), (w - 1, h // 2)])[2]
+    rows = max(2, h // 50)
+    hits = sum(1 for y in range(rows) for x in range(w) if abs(px[x, y] - bg) > 40)
+    return hits > rows * 2  # більше ~2 «предметних» пікселів на рядок — щось виходить за верхній край
+
+
 _turn = {}
 
 
@@ -103,7 +113,7 @@ def pick(key):
     return SCENES[key][i % len(SCENES[key])]
 
 
-def build_prompt(code, base):
+def build_prompt(code, base, cropped_top=False):
     """Сцена з SCENES (почергово/випадково), розміри — з промпту функції; кадр з функції лишаємо для O."""
     kind = code.split("-")[1][0]
     if kind == "O": return base
@@ -113,9 +123,16 @@ def build_prompt(code, base):
     lamp = {"L": "chandelier", "P": "pendant light", "W": "wall sconce", "F": "floor lamp", "T": "table lamp", "C": "ceiling light"}[kind]
     m = re.search(r"The [a-z ]+ is about [^;]*;[^.]*\.", base)
     size = (m.group(0) + " ") if m else ""
-    big = (f"The room is spacious with a 2.8 m ceiling; the {lamp} must not look oversized — clearly smaller than the furniture beneath it, "
-           f"with plenty of empty ceiling around it. ") if kind in "LPC" else ""
-    return (f"Use the attached product photo as the exact reference for the {lamp}. Scene: {pick(key)}. {size}{big}{LIGHT}"
+    # 24.11 власник: світильники все ще завеликі → на 15–20% менше для всіх типів
+    big = ((f"The room is spacious with a 2.8–3 m ceiling; the {lamp} takes no more than about one fifth of the frame width, "
+            f"clearly smaller than the sofa or table beneath it, with plenty of empty ceiling around it. ") if kind in "LPC" else "") + \
+          (f"Show the {lamp} about 20% smaller in the frame than in a typical product-focused shot, at true real-world scale relative to the furniture "
+           f"and the room; it must never look oversized. ")
+    # 24.11 власник: на референсах з обрізаним верхом кріплення вигадувалось навмання → так само не показуємо його
+    crop = (f"IMPORTANT: in the reference photo the top of the {lamp} (ceiling canopy, mount and suspension) is cut off and not visible. "
+            f"Do NOT invent any mount, canopy, rods or cables: frame the shot so the upper part of the {lamp} is cut off by the top edge of the image "
+            f"in the same way as in the reference, so the mount stays out of view. ") if cropped_top and kind in "LP" else ""
+    return (f"Use the attached product photo as the exact reference for the {lamp}. Scene: {pick(key)}. {crop}{size}{big}{LIGHT}"
             f"Photorealistic interior photography, {'28mm' if kind in 'LPC' else '35mm'} lens, natural composition, lived-in and styled, "
             f"no people, no text, no logos, no watermarks, no other decorative lamps except those described. "
             f"Keep the {lamp}'s design exactly as in the reference: same shape, proportions, number of arms, tiers and shades, every decorative detail "
@@ -127,8 +144,9 @@ def gen_local(code, model):
     import base64, urllib.parse
     p = req("prompt", code=code)
     if "error" in p: return p
-    p["prompt"] = build_prompt(code, p["prompt"])
-    raw = urllib.request.urlopen(urllib.request.Request(p["photo"], headers={"user-agent": "Mozilla/5.0 SvitloPlaza"}), timeout=60).read()
+    raw0 = urllib.request.urlopen(urllib.request.Request(p["photo"], headers={"user-agent": "Mozilla/5.0 SvitloPlaza"}), timeout=60).read()
+    p["prompt"] = build_prompt(code, p["prompt"], top_cropped(raw0))
+    raw = raw0
     ref = Image.open(io.BytesIO(raw)).convert("RGB"); ref.thumbnail((1600, 1600), Image.LANCZOS)
     rb = io.BytesIO(); ref.save(rb, "JPEG", quality=90)
     body = {"contents": [{"role": "user", "parts": [{"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(rb.getvalue()).decode()}}, {"text": p["prompt"]}]}],
