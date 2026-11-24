@@ -125,7 +125,7 @@ def build_prompt(code, base, cropped_top=False):
     size = (m.group(0) + " ") if m else ""
     # 24.11 власник: світильники все ще завеликі → на 15–20% менше для всіх типів
     big = ((f"The room is spacious with a 2.8–3 m ceiling; the {lamp} takes no more than about one fifth of the frame width, "
-            f"clearly smaller than the sofa or table beneath it, with plenty of empty ceiling around it. ") if kind in "LPC" else "") + \
+            f"clearly smaller than the sofa or table beneath it{'' if cropped_top and kind in 'LP' else ', with plenty of empty ceiling around it'}. ") if kind in "LPC" else "") + \
           (f"Show the {lamp} about 20% smaller in the frame than in a typical product-focused shot, at true real-world scale relative to the furniture "
            f"and the room; it must never look oversized. ")
     # 24.11 власник: на референсах з обрізаним верхом кріплення вигадувалось навмання → так само не показуємо його
