@@ -50,7 +50,8 @@ export async function GET() {
     let desc = "";
     try { desc = describeModel(m as unknown as DModel, (V.get(m.code as string) ?? []) as unknown as DVariant[], (S.get(m.series_id as string) ?? null) as unknown as DSeries).body.join(" "); } catch { /* опис не обов'язковий */ }
     if (!desc) desc = String(m.description ?? m.title);
-    const ai = ((m.photos_ai as string[]) ?? []).map(full); // власні ШІ-інтер'єри — першими серед додаткових
+    // ШІ-інтер'єри — лише позначені «точно збігається з товаром» (24.11, Merchant «Спотворення фактів»); неточні — тільки на сайті
+    const ai = ((m.photos_ai_exact as string[]) ?? []).map(full);
     const extra = [full(m.photo_interior as string), full(m.photo as string)];
     for (const v of vs) {
       const main = full(v.photo as string) ?? full(m.photo as string) ?? (cardPhoto(m.photo as string) ? full(m.photo as string) : null);

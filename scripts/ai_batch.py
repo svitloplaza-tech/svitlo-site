@@ -14,6 +14,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent))
 from ai_photos import call as put_photo  # noqa: E402
+from ai_xmp import save_webp  # noqa: E402  позначка ШІ в кожному файлі
 
 GEN = "https://teidqxvftoihhwmubiyf.supabase.co/functions/v1/ai-gen"
 import os
@@ -117,8 +118,9 @@ def build_prompt(code, base):
     return (f"Use the attached product photo as the exact reference for the {lamp}. Scene: {pick(key)}. {size}{big}{LIGHT}"
             f"Photorealistic interior photography, {'28mm' if kind in 'LPC' else '35mm'} lens, natural composition, lived-in and styled, "
             f"no people, no text, no logos, no watermarks, no other decorative lamps except those described. "
-            f"Keep the {lamp}'s design exactly as in the reference: same shape, proportions, number of arms and shades, materials, glass and metal color, "
-            f"and type of suspension.")
+            f"Keep the {lamp}'s design exactly as in the reference: same shape, proportions, number of arms, tiers and shades, every decorative detail "
+            f"(openwork, texture, pattern of the shades), materials, glass and metal color, the same type of suspension and EXACTLY the same number "
+            f"of ceiling canopies and suspension points as in the reference — do not add or remove any.")
 
 
 def gen_local(code, model):
@@ -141,8 +143,7 @@ def gen_local(code, model):
     img = next((x["inlineData"]["data"] for x in parts if "inlineData" in x), None)
     if not img: return {"error": f"no image {(d.get('candidates') or [{}])[0].get('finishReason')} {d.get('promptFeedback')}"}
     out = Image.open(io.BytesIO(base64.b64decode(img))).convert("RGB")
-    ob = io.BytesIO(); out.save(ob, "WEBP", quality=84, method=6)
-    up = urllib.request.Request(f"{GEN}?action=add&code={code}&model={model}", data=ob.getvalue(), method="PUT",
+    up = urllib.request.Request(f"{GEN}?action=add&code={code}&model={model}", data=save_webp(out, 84), method="PUT",
                                 headers={"x-ai-secret": SECRET, "content-type": "image/webp", "x-prompt": urllib.parse.quote(p["prompt"])})
     try:
         return json.load(urllib.request.urlopen(up, timeout=120))
@@ -173,9 +174,9 @@ def publish():
         if n > 9: print(f"{code}: уже 9 кадрів, пропуск"); continue
         raw = urllib.request.urlopen(c["url"], timeout=120).read()
         im = Image.open(io.BytesIO(raw)).convert("RGB"); im.thumbnail((2000, 2000), Image.LANCZOS)
-        b = io.BytesIO(); im.save(b, "WEBP", quality=82, method=6)
-        put_photo("PUT", code, n, b.getvalue())
-        req("decide", "POST", {"id": c["id"], "status": "published"})
+        r = put_photo("PUT", code, n, save_webp(im, 82))
+        site = next((u for u in r["photos_ai"] if f"_int_{n}-" in u), None)
+        req("decide", "POST", {"id": c["id"], "status": "published", "site_url": site})
         print(f"{code} #{n}: на сайті → https://www.svitloplaza.store/p/{code.lower()}")
     print(f"опубліковано: {len(rows)}")
 

@@ -11,6 +11,9 @@ import io, os, re, sys, json, urllib.request
 from pathlib import Path
 from PIL import Image
 
+sys.path.insert(0, str(Path(__file__).parent))
+from ai_xmp import save_webp  # noqa: E402  позначка ШІ (IPTC trainedAlgorithmicMedia) — вимога Google
+
 FN = "https://teidqxvftoihhwmubiyf.supabase.co/functions/v1/ai-photos"
 RX = re.compile(r"^(SP-[A-Za-z]\d+(?:\.\d+)?)_int_(\d)\.(jpe?g|png|webp)$", re.I)
 
@@ -26,8 +29,7 @@ def webp(p: Path) -> bytes:
     im = Image.open(p)
     im = im.convert("RGB")
     im.thumbnail((2000, 2000), Image.LANCZOS)
-    b = io.BytesIO(); im.save(b, "WEBP", quality=82, method=6)
-    return b.getvalue()
+    return save_webp(im, 82)
 
 
 def main(a):

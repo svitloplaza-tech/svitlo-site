@@ -6,7 +6,7 @@
 //   POST ?action=proxy&model=…  — прохідний generateContent (скрипт будує запит сам)
 //   GET  ?action=prompt&code=…  /  PUT ?action=add&code=…&model=… (тіло webp)  — генерація в скрипті (основний шлях: у функції бракує CPU на великі фото)
 //   GET  ?action=queue[&limit=50&kinds=L,P]      — черга моделей (view ai_queue)
-//   POST ?action=decide  {id, status, note}       — approved | rejected | pending | published (публікує скрипт scripts/ai_batch.py)
+//   POST ?action=decide  {id, status?, note?, exact?, site_url?} — статус; exact = «точно збігається» (лише такі — у фід Merchant)
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
 const E = (k: string) => Deno.env.get(k)!;
@@ -139,17 +139,26 @@ Deno.serve(async (req) => {
 
   if (action === "list") {
     const st = q.get("status") ?? "pending";
-    const { data, error } = await db.from("ai_candidates").select("id,model_code,url,gen_model,status,note,created_at,models(title,slug,photo,kind_code,facets)")
+    const { data, error } = await db.from("ai_candidates").select("id,model_code,url,gen_model,status,note,exact,site_url,created_at,models(title,slug,photo,kind_code,facets)")
       .eq("status", st).order("model_code").order("id").limit(Number(q.get("limit") ?? 500));
     if (error) return json({ error: error.message }, 500);
     return json(data);
   }
 
   if (action === "decide" && req.method === "POST") {
+    // {id, status?, note?, exact?, site_url?}; exact: true — точно збігається з товаром (у фід Merchant), false — лише атмосфера (сайт)
     const b = await req.json().catch(() => ({}));
-    if (!["approved", "rejected", "pending", "published"].includes(b.status)) return json({ error: "bad status" }, 400);
-    const { error } = await db.from("ai_candidates").update({ status: b.status, note: b.note ?? null, decided_at: new Date().toISOString() })
-      .eq("id", b.id).in("status", ["pending", "approved", "rejected"]);
+    const upd: Record<string, unknown> = {};
+    if (b.status !== undefined) {
+      if (!["approved", "rejected", "pending", "published"].includes(b.status)) return json({ error: "bad status" }, 400);
+      Object.assign(upd, { status: b.status, note: b.note ?? null, decided_at: new Date().toISOString() });
+    }
+    if (b.exact === true || b.exact === false || b.exact === null) upd.exact = b.exact;
+    if (typeof b.site_url === "string") upd.site_url = b.site_url;
+    if (!Object.keys(upd).length) return json({ error: "nothing to update" }, 400);
+    let qq = db.from("ai_candidates").update(upd).eq("id", b.id);
+    if (b.status !== undefined) qq = qq.in("status", ["pending", "approved", "rejected"]); // опубліковане назад не повертаємо
+    const { error } = await qq;
     return error ? json({ error: error.message }, 500) : json({ ok: true });
   }
   return json({ error: "unknown action" }, 400);
