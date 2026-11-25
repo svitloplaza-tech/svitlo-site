@@ -26,8 +26,8 @@ export default async function Home() {
   const newCards = fresh.map((m) => {
     const ph = cardPhoto(m.photo) ?? m.photo;
     const price = m.price_from != null ? `${m.variants_count > 1 ? "від " : ""}${fmt(m.price_from)} ₴` : "ціна за запитом";
-    return `<a class="nr" href="/p/${esc(m.slug)}">${ph ? `<img src="${esc(ph)}" alt="${esc(m.title)}" loading="lazy" decoding="async">` : ""}<span class="nn">${esc((m.series_name || m.title).toUpperCase())}</span><small class="nm">${esc(m.title)} · ${price}</small></a>`;
-  }).join("<i>·</i>");
+    return `<a class="nr" href="/p/${esc(m.slug)}" draggable="false">${ph ? `<img src="${esc(ph)}" alt="${esc(m.title)}" loading="lazy" decoding="async" draggable="false">` : ""}<small class="nm">${esc(m.title)} · ${price}</small></a>`;
+  }).join("");
   const newHtml = fresh.length ? `<section class="novi" id="novynky"><div class="wrap"><div class="novi-head rv"><div><span class="chip"><b>03</b><span>Новинки в шоурумі</span></span>
 <h2>Щойно привезли <span class="mute">— дивіться наживо</span></h2></div><div class="novi-nav"><button type="button" class="nw-btn" data-d="-1" aria-label="Попередні">‹</button><button type="button" class="nw-btn" data-d="1" aria-label="Наступні">›</button></div></div></div>
 <nav class="nrow" aria-label="Новинки"><div class="nw-track">${newCards}</div></nav><div class="wrap"><div class="cta-row rv"><a class="btn btn-main" href="/novynky">Усі новинки →</a><a class="btn btn-sec" href="/shourum">Адреса шоуруму</a></div></div></section>` : "";

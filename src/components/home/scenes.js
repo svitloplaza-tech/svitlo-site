@@ -323,6 +323,16 @@ export function initHome(root, Lenis){
   // Новинки: стрілки зсувають ряд на ~80% ширини екрана (поверх зсуву від прокрутки)
   if(novi&&track) root.querySelectorAll('.nw-btn').forEach(b=>b.addEventListener('click',()=>{manual+=(+b.dataset.d)*-innerWidth*.8;track.classList.remove('live');novFrame()}));
   if(track){const te=()=>novFrame();track.addEventListener('transitionend',te);offs.push(()=>track.removeEventListener('transitionend',te))}
+  // перетягування пальцем (і мишею): горизонтальний рух зсуває ряд, вертикальний лишається прокруткою сторінки (touch-action:pan-y)
+  if(track){let sx=0,sm=0,moved=false,id=null;
+    const down=e=>{if(e.button>0)return;id=e.pointerId;sx=e.clientX;sm=manual;moved=false};
+    const move=e=>{if(e.pointerId!==id)return;const dx=e.clientX-sx;if(!moved&&Math.abs(dx)<6)return;
+      if(!moved){moved=true;track.classList.add('drag');try{track.setPointerCapture(id)}catch{}}
+      manual=sm+dx;novFrame()};
+    const up=e=>{if(e.pointerId!==id)return;id=null;track.classList.remove('drag');if(moved)setTimeout(()=>moved=false,0)};
+    const click=e=>{if(moved){e.preventDefault();e.stopPropagation()}};
+    on(track,'pointerdown',down);on(track,'pointermove',move);on(track,'pointerup',up);on(track,'pointercancel',up);track.addEventListener('click',click,true);
+    offs.push(()=>track.removeEventListener('click',click,true))}
   root.querySelectorAll('.t').forEach(t=>t.addEventListener('pointermove',e=>{const r=t.getBoundingClientRect();t.style.setProperty('--mx',(e.clientX-r.left)+'px');t.style.setProperty('--my',(e.clientY-r.top)+'px')}));
   root.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const el=document.querySelector(a.getAttribute('href'));if(el&&lenis){e.preventDefault();lenis.scrollTo(el)}}));
 
