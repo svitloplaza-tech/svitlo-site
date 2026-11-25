@@ -45,7 +45,9 @@ export async function GET() {
   const backDate = new Date(Date.now() + ORDER_DAYS * 864e5).toISOString().slice(0, 10) + "T00:00+0200";
   const items: string[] = [];
   for (const m of models) {
-    const vs = (V.get(m.code as string) ?? []).filter((v) => typeof v.price === "number" && (v.price as number) > 0);
+    // models.seo.no_feed = true — модель лише на сайті, у фід не йде (25.11: нові Lingrun S2971–S2981, фото з сайтів виробників)
+    if ((m.seo as { no_feed?: boolean } | null)?.no_feed) continue;
+    const vs =(V.get(m.code as string) ?? []).filter((v) => typeof v.price === "number" && (v.price as number) > 0);
     if (!vs.length) continue;
     let desc = "";
     try { desc = describeModel(m as unknown as DModel, (V.get(m.code as string) ?? []) as unknown as DVariant[], (S.get(m.series_id as string) ?? null) as unknown as DSeries).body.join(" "); } catch { /* опис не обов'язковий */ }
