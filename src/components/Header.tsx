@@ -17,6 +17,7 @@ const PHONE_TXT = "+38 (098) 383-60-14";
 
 const NAV = [
   { href: "/katalog", label: "Каталог" },
+  { href: "/novynky", label: "Новинки" },
   { href: "/shourum", label: "Шоурум" },
   { href: "/3d-tur", label: "3D-тур" },
   { href: "/sotsmerezhi", label: "Ми в соцмережах" },

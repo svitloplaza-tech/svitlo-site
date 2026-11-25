@@ -8,6 +8,7 @@ export type CatalogModel = {
   photo: string | null; own: boolean; sort: number; price_from: number | null; in_stock: boolean;
   variants_count: number; colors: string[] | null;
   facets?: import("./filters").Facets | null;
+  arrived_at?: string | null;
 };
 export type Variant = {
   sku: string; model_code: string; size: string | null; color: string | null; color_code: string | null; temp: string | null;
@@ -62,6 +63,15 @@ async function loadTotals() {
     db.from("variants").select("*", { count: "exact", head: true }).eq("is_active", true),
   ]);
   return { series: s.count ?? 0, models: m.count ?? 0, variants: v.count ?? 0 };
+}
+
+/** Новинки шоуруму: моделі з датою надходження (models.arrived_at), найновіші першими. */
+export function getNew(limit = 200): Promise<CatalogModel[]> { return memo("new:" + limit, () => loadNew(limit)); }
+async function loadNew(limit: number): Promise<CatalogModel[]> {
+  const { data, error } = await db.from("catalog_models").select("*").not("arrived_at", "is", null)
+    .order("arrived_at", { ascending: false }).order("series_number", { ascending: false }).limit(limit);
+  if (error) throw error;
+  return (data ?? []) as CatalogModel[];
 }
 
 /** Усі моделі типу (до ~900 рядків), фільтруємо й гортаємо на сервері. */
