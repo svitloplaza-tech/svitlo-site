@@ -305,6 +305,8 @@ export function initHome(root, Lenis){
     io.unobserve(e.target)}),{threshold:.2});offs.push(()=>io.disconnect());
   root.querySelectorAll('.rv').forEach(el=>io.observe(el));
 
+  const track=root.querySelector('.nw-track');
+  if(track) root.querySelectorAll('.nw-btn').forEach(b=>b.addEventListener('click',()=>track.scrollBy({left:(+b.dataset.d)*track.clientWidth*.8,behavior:reduce?'auto':'smooth'})));
   root.querySelectorAll('.t').forEach(t=>t.addEventListener('pointermove',e=>{const r=t.getBoundingClientRect();t.style.setProperty('--mx',(e.clientX-r.left)+'px');t.style.setProperty('--my',(e.clientY-r.top)+'px')}));
   root.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const el=document.querySelector(a.getAttribute('href'));if(el&&lenis){e.preventDefault();lenis.scrollTo(el)}}));
 
