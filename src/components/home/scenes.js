@@ -206,6 +206,20 @@ export function initHome(root, Lenis){
   const sp=$('#spectrum'); const cols=['#E168FF','#FFA068','#687FFF'];
   for(let i=0;i<34;i++){const e=document.createElement('i');e.style.height=(25+Math.abs(Math.sin(i*1.7))*75)+'%';e.style.background=cols[i%3];sp.appendChild(e)}
   const seriesLinks=[...root.querySelectorAll('.rows a')];
+  const novi=$('.novi'), track=root.querySelector('.nw-track'), newLinks=[...root.querySelectorAll('.nr')];
+  let manual=0, scrolled=0;
+  // ряд новинок: прокрутка сторінки проводить ряд приблизно на півтора екрана (~1,5 «оберту» коліщатка), решту — стрілками
+  function novFrame(){
+    if(!novi||!track) return;
+    const r=novi.getBoundingClientRect(); if(r.bottom<0||r.top>innerHeight) return;
+    const span=Math.max(0,track.scrollWidth-innerWidth);             // наскільки ряд довший за екран
+    const q=reduce?0:clamp((innerHeight-r.top)/(innerHeight+r.height)); // 0 — секція щойно з'явилась знизу, 1 — пішла вгору
+    scrolled=q*Math.min(span,innerWidth*1.5);
+    manual=Math.max(-span+scrolled,Math.min(scrolled,manual));           // не далі країв ряду
+    track.style.setProperty('--x',(-scrolled+manual).toFixed(1));
+    const cx=innerWidth/2, w=innerWidth*.22;
+    for(const el of newLinks){const b=el.getBoundingClientRect();el.style.setProperty('--hl',clamp(1-Math.abs((b.left+b.right)/2-cx)/w).toFixed(3))}
+  }
   const prog=el=>{const r=el.getBoundingClientRect();return clamp(-r.top/(r.height-innerHeight||1))};
 
   let heroP=0, heroVisible=true;
@@ -267,6 +281,7 @@ export function initHome(root, Lenis){
     if(r.top<innerHeight&&r.bottom>0){ const cx=innerWidth/2, w=innerWidth*.22;
       for(const el of seriesLinks){ const b=el.getBoundingClientRect(); const d=Math.abs((b.left+b.right)/2-cx);
         el.style.setProperty('--hl',clamp(1-d/w).toFixed(3)); } }
+    if(track){track.classList.add('live');novFrame()}
   }
   let last=performance.now();
   function loop(t){
@@ -305,8 +320,9 @@ export function initHome(root, Lenis){
     io.unobserve(e.target)}),{threshold:.2});offs.push(()=>io.disconnect());
   root.querySelectorAll('.rv').forEach(el=>io.observe(el));
 
-  const track=root.querySelector('.nw-track');
-  if(track) root.querySelectorAll('.nw-btn').forEach(b=>b.addEventListener('click',()=>track.scrollBy({left:(+b.dataset.d)*track.clientWidth*.8,behavior:reduce?'auto':'smooth'})));
+  // Новинки: стрілки зсувають ряд на ~80% ширини екрана (поверх зсуву від прокрутки)
+  if(novi&&track) root.querySelectorAll('.nw-btn').forEach(b=>b.addEventListener('click',()=>{manual+=(+b.dataset.d)*-innerWidth*.8;track.classList.remove('live');novFrame()}));
+  if(track){const te=()=>novFrame();track.addEventListener('transitionend',te);offs.push(()=>track.removeEventListener('transitionend',te))}
   root.querySelectorAll('.t').forEach(t=>t.addEventListener('pointermove',e=>{const r=t.getBoundingClientRect();t.style.setProperty('--mx',(e.clientX-r.left)+'px');t.style.setProperty('--my',(e.clientY-r.top)+'px')}));
   root.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const el=document.querySelector(a.getAttribute('href'));if(el&&lenis){e.preventDefault();lenis.scrollTo(el)}}));
 
