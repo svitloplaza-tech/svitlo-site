@@ -93,6 +93,32 @@ LIGHT = ("Time of day: late evening — windows show a deep blue dusk or night s
          "and is the main light source, warm 3000K glow with realistic light falloff and soft shadows; only subtle warm accent lighting elsewhere. ")
 
 
+PUB = "sb_publishable_Sm2y9bo0N-Zx-FfnfUWAqg_k9CidQkt"  # публічний ключ сайту (read-only, view ai_meta)
+
+
+def meta(code):
+    u = f"https://teidqxvftoihhwmubiyf.supabase.co/rest/v1/ai_meta?code=eq.{code}&select=*"
+    r = json.load(urllib.request.urlopen(urllib.request.Request(u, headers={"apikey": PUB}), timeout=60))
+    return r[0] if r else {}
+
+
+def num_cm(s):
+    m = re.search(r"(\d+(?:[.,]\d+)?)", s or "")
+    return float(m.group(1).replace(",", ".")) if m else None
+
+
+def mount_kind(code, m):
+    """27.11 (розбір відхилених): стельові (пристельові) люстри генерувались підвісними з тросиками/штангами.
+    flush — корпус прямо на стелі (LED-люстри, «стельова…», висота ≤ 40 см і без регульованого підвісу); pendant — є мін./макс. висота підвісу."""
+    k = code.split("-")[1][0]
+    if k not in "LPC": return "default"  # у торшерів мін./макс. висота — це висота самого торшера
+    t = (m.get("title") or "").lower(); sub = (m.get("sub") or "").lower(); h = m.get("h")
+    if m.get("hmax"): return "pendant"
+    if k in "LC" and (("стельов" in t or "світлодіодні люстри" in sub or "пристел" in t) and (h is None or float(h) <= 40)): return "flush"
+    if k == "L" and h is not None and float(h) <= 30: return "flush"
+    return "default"
+
+
 def top_cropped(raw):
     """Чи торкається світильник верхнього краю референсу (кріплення обрізане): у верхніх 2% рядків є пікселі, помітно відмінні від фону."""
     im = Image.open(io.BytesIO(raw)).convert("L"); im.thumbnail((400, 400))
@@ -113,31 +139,62 @@ def pick(key):
     return SCENES[key][i % len(SCENES[key])]
 
 
-def build_prompt(code, base, cropped_top=False):
-    """Сцена з SCENES (почергово/випадково), розміри — з промпту функції; кадр з функції лишаємо для O."""
+def build_prompt(code, base, cropped_top=False, m=None):
+    """Сцена з SCENES (по черзі), розміри — з промпту функції, кріплення/висоти — з ai_meta (27.11)."""
+    m = m or {}
     kind = code.split("-")[1][0]
-    if kind == "O": return base
+    sub = (m.get("sub") or "").lower()
+    if kind == "O":
+        if any(x in sub for x in ("стовпч", "ландшафт", "газон", "торшер")):
+            return (f"Use the attached product photos as the exact reference for the outdoor bollard / post light. Scene: modern house garden at dusk, "
+                    f"the light STANDS ON THE GROUND along a stone garden path among neat grass and low plants (it is a free-standing post light, "
+                    f"NOT mounted on a wall). It is about {m.get('h') or 50} cm tall. {LIGHT}Photorealistic, no people, no text, no logos. "
+                    f"Keep its design exactly as in the reference: same shape, proportions, materials and colors; do not add any parts.")
+        return base
+    mk = mount_kind(code, m)
     if kind == "L": key = "L_long" if "long side parallel" in base else "L"
     elif kind == "P": key = "P_long" if "long side parallel" in base else "P_small" if "Three identical" in base else "P"
     else: key = kind
     lamp = {"L": "chandelier", "P": "pendant light", "W": "wall sconce", "F": "floor lamp", "T": "table lamp", "C": "ceiling light"}[kind]
-    m = re.search(r"The [a-z ]+ is about [^;]*;[^.]*\.", base)
-    size = (m.group(0) + " ") if m else ""
-    # 24.11 власник: світильники все ще завеликі → на 15–20% менше для всіх типів
+    scene = pick(key)
+    h = m.get("h")
+    if mk == "flush":  # пристельова: жодних тросиків/штанг, корпус прямо на стелі
+        scene = re.sub(r"hangs? (?:about \d+ cm )?above", "is mounted flush on the ceiling above", scene)
+        scene = re.sub(r"hangs? from the ceiling in", "is mounted flush on the ceiling in", scene)
+        scene = re.sub(r"hangs? in the center", "is mounted flush on the ceiling in the center", scene)
+        scene = re.sub(r"hangs? (?:low )?(?:in a row )?", "is mounted on the ceiling ", scene)
+        hang = (f"MOUNTING: this is a FLUSH ceiling {lamp} — its body is fixed directly to the ceiling with NO gap. There are NO cables, NO wires, "
+                f"NO chains and NO long rods, and no extra canopy or base plate; if the reference shows a short stem, keep it exactly that short. "
+                + (f"The whole fixture is only about {h:g} cm deep from the ceiling. " if h else "")
+                + "Do not convert it into a pendant. ")
+        cropped_top = False
+    elif mk == "pendant":
+        lo, hi = num_cm(m.get("hmin")), num_cm(m.get("hmax"))
+        drop = round((lo or 40) + ((hi or (lo or 40)) - (lo or 40)) * 0.25)
+        hang = (f"MOUNTING: a pendant with an adjustable suspension ({m.get('hmin')}–{m.get('hmax')}); show the total drop from the ceiling of about {drop} cm, "
+                f"with exactly the same type and number of suspension cables/rods as in the reference. ")
+    else:
+        hang = ((f"MOUNTING: copy the mounting exactly as seen in the reference; the whole fixture from the ceiling to its lowest point is about {h:g} cm — "
+                 f"do NOT lengthen the stem, rod or cables. ") if h and kind == "L" else
+                "MOUNTING: copy the mounting exactly as seen in the reference; do not lengthen stems, rods or cables. ")
+    m_ = re.search(r"The [a-z ]+ is about [^;]*;[^.]*\.", base)
+    size = (m_.group(0) + " ") if m_ else ""
     big = ((f"The room is spacious with a 2.8–3 m ceiling; the {lamp} takes no more than about one fifth of the frame width, "
             f"clearly smaller than the sofa or table beneath it{'' if cropped_top and kind in 'LP' else ', with plenty of empty ceiling around it'}. ") if kind in "LPC" else "") + \
           (f"Show the {lamp} about 20% smaller in the frame than in a typical product-focused shot, at true real-world scale relative to the furniture "
            f"and the room; it must never look oversized. ")
-    # 24.11 власник: на референсах з обрізаним верхом кріплення вигадувалось навмання → так само не показуємо його
-    crop = (f"IMPORTANT: in the reference photo the top of the {lamp} (ceiling canopy, mount and suspension) is cut off and not visible. "
-            f"Do NOT invent any mount, canopy, rods or cables: frame the shot so the upper part of the {lamp} is cut off by the top edge of the image "
-            f"in the same way as in the reference, so the mount stays out of view. ") if cropped_top and kind in "LP" else ""
-    return (f"Use the attached product photo as the exact reference for the {lamp}. Scene: {pick(key)}. {crop}{size}{big}{LIGHT}"
+    # 27.11: обрізаний верх — кадр без стелі (а не «дорисуй кріплення»)
+    crop = (f"FRAMING: in the reference the top of the {lamp} is cut off. The ceiling is NOT visible in the image: the top edge of the image cuts through "
+            f"the upper part of the {lamp} exactly where the reference photo is cut, and nothing above that point is shown or invented. ") if cropped_top and kind in "LP" else ""
+    return (f"Use the attached product photos (several views of the same product) as the exact reference for the {lamp}. Scene: {scene}. "
+            f"{hang}{crop}{size}{big}{LIGHT}"
             f"Photorealistic interior photography, {'28mm' if kind in 'LPC' else '35mm'} lens, natural composition, lived-in and styled, "
             f"no people, no text, no logos, no watermarks, no other decorative lamps except those described. "
-            f"Keep the {lamp}'s design exactly as in the reference: same shape, proportions, number of arms, tiers and shades, every decorative detail "
-            f"(openwork, texture, pattern of the shades), materials, glass and metal color, the same type of suspension and EXACTLY the same number "
-            f"of ceiling canopies and suspension points as in the reference — do not add or remove any.")
+            f"FIDELITY: reproduce the {lamp} exactly as in the reference photos — same overall shape and outline (e.g. a triangle stays a triangle), "
+            f"the same number, size and position of arms, tiers, shades and LED elements, every decorative detail (openwork, texture, pattern), "
+            f"materials, glass and metal colors. Do not add, remove, enlarge or restyle any part; plain white shades stay plain white; only the parts that are light sources "
+            f"in the reference glow — the central body, base and frame do not emit light; "
+            f"do not add mounts, bases, canopies, rods, cables or chains that are not visible in the reference.")
 
 
 def gen_local(code, model):
@@ -145,11 +202,20 @@ def gen_local(code, model):
     p = req("prompt", code=code)
     if "error" in p: return p
     raw0 = urllib.request.urlopen(urllib.request.Request(p["photo"], headers={"user-agent": "Mozilla/5.0 SvitloPlaza"}), timeout=60).read()
-    p["prompt"] = build_prompt(code, p["prompt"], top_cropped(raw0))
-    raw = raw0
-    ref = Image.open(io.BytesIO(raw)).convert("RGB"); ref.thumbnail((1600, 1600), Image.LANCZOS)
-    rb = io.BytesIO(); ref.save(rb, "JPEG", quality=90)
-    body = {"contents": [{"role": "user", "parts": [{"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(rb.getvalue()).decode()}}, {"text": p["prompt"]}]}],
+    mt = meta(code)
+    p["prompt"] = build_prompt(code, p["prompt"], top_cropped(raw0), mt)
+
+    def jpg(raw, side=1600):
+        im = Image.open(io.BytesIO(raw)).convert("RGB"); im.thumbnail((side, side), Image.LANCZOS)
+        b = io.BytesIO(); im.save(b, "JPEG", quality=88); return base64.b64encode(b.getvalue()).decode()
+    parts = [{"inline_data": {"mime_type": "image/jpeg", "data": jpg(raw0)}}]
+    main_id = p["photo"].rsplit("/", 1)[-1]
+    for u in [x for x in (mt.get("ref_photos") or []) if x.rsplit("/", 1)[-1] != main_id][:2]:  # 27.11: додаткові ракурси — точніша форма
+        try:
+            parts.append({"inline_data": {"mime_type": "image/jpeg", "data": jpg(urllib.request.urlopen(
+                urllib.request.Request(u.replace("/middle/", "/original/"), headers={"user-agent": "Mozilla/5.0 SvitloPlaza"}), timeout=60).read(), 1024)}})
+        except Exception: pass
+    body = {"contents": [{"role": "user", "parts": parts + [{"text": p["prompt"]}]}],
             "generationConfig": {"responseModalities": ["IMAGE"], "imageConfig": {"aspectRatio": "4:5", "imageSize": SIZE}}}
     r = urllib.request.Request(f"{GEN}?action=proxy&model={model}", data=json.dumps(body).encode(),
                                headers={"x-ai-secret": SECRET, "content-type": "application/json"}, method="POST")
